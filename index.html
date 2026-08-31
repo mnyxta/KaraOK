@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karaoke Song Picker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Load the generated Base64 images file -->
+    <script src="images_data.js"></script>
+
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden" onload="initApp()">
+
+    <!-- Header -->
+    <header class="glass sticky top-0 z-20 px-4 py-3 flex flex-col md:flex-row gap-3 items-center justify-between shadow-xl">
+        <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+            <h1 class="text-xl font-bold tracking-wider text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-microphone-lines text-pink-500"></i> KARAOKE HUB
+            </h1>
+            <div class="flex items-center gap-2">
+                <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-import"></i> <span id="importBtnLabel">Import Playlist</span>
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
+                </label>
+
+                <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-shuffle"></i> Random
+                </button>
+
+                <button onclick="toggleArtistSort()" id="sortBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="sortLabel">By Count</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar with Dedicated Search Button -->
+        <div class="relative w-full md:w-96 flex items-center gap-1.5">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" onkeydown="if(event.key==='Enter') executeSearch()" placeholder="Search artist or song..." 
+                       class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition">
+            </div>
+            <button onclick="executeSearch()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2.5 rounded-xl font-semibold transition shrink-0 flex items-center gap-1">
+                Search
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-auto justify-center overflow-x-auto hide-scrollbar">
+            <button onclick="showArtistsView()" id="tab-artists" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">
+                <i class="fa-solid fa-user-group mr-1"></i> Artists
+            </button>
+            <button onclick="showAllSongsView()" id="tab-all" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-music mr-1"></i> All Songs
+            </button>
+            <button onclick="showFavsView()" id="tab-favs" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                Favorites (<span id="favCount">0</span>)
+            </button>
+            <button onclick="showRecentsView()" id="tab-recents" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                Recents
+            </button>
+        </div>
+    </header>
+
+    <!-- Artist Breadcrumb & Song Sort Controls -->
+    <div id="artistBreadcrumb" class="hidden glass px-6 py-2.5 flex items-center justify-between border-b border-slate-800">
+        <button onclick="showArtistsView()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-200 transition font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Back to Artists
+        </button>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span id="selectedArtistName" class="text-base font-bold text-indigo-400"></span>
+                <span id="selectedArtistCount" class="text-xs bg-indigo-600/30 text-indigo-300 px-2.5 py-0.5 rounded-full font-semibold border border-indigo-500/30"></span>
+            </div>
+
+            <button onclick="toggleArtistSongSort()" id="artistSongSortBtn" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-sort"></i> <span id="artistSongSortLabel">Sort: Title (A-Z)</span>
+            </button>
+        </div>
+    </div>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-6">
+        <div id="mainContainer"></div>
+        
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-slate-500">
+            <i class="fa-solid fa-compact-disc text-5xl mb-3 animate-spin"></i>
+            <p id="emptyMessage" class="text-sm">Please select your playlist file using the "Import Playlist" button.</p>
+        </div>
+    </main>
+
+    <!-- Random Song Selector Modal -->
+    <div id="randomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 flex flex-col items-center text-center shadow-2xl relative border border-slate-700/80">
+            <button onclick="closeRandomModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="text-amber-500 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-dice text-sm"></i> Random Pick
+            </div>
+
+            <div id="randomImageContainer" class="w-32 h-32 rounded-xl overflow-hidden shadow-lg mb-4 bg-slate-800 flex items-center justify-center border border-slate-700">
+                <!-- Image or fallback icon will be injected here -->
+            </div>
+
+            <h3 id="randomSongTitle" class="text-lg font-bold text-white mb-1 leading-snug"></h3>
+            <p id="randomSongArtist" class="text-sm text-indigo-400 font-semibold mb-1"></p>
+            <p id="randomSongAlbum" class="text-xs text-slate-400 font-medium mb-6 flex items-center gap-1"><i class="fa-solid fa-compact-disc text-[10px]"></i> <span></span></p>
+
+            <div class="flex items-center gap-3 w-full">
+                <button onclick="pickRandomSong()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl font-semibold text-xs transition border border-slate-700 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-shuffle"></i> Pick Another
+                </button>
+                <button id="randomPlayBtn" onclick="" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-semibold text-xs transition shadow flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-play"></i> Play Karaoke
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let songs = [];
+        let favorites = new Set(JSON.parse(localStorage.getItem('karaoke_favs') || '[]'));
+        let recents = JSON.parse(localStorage.getItem('karaoke_recents') || '[]');
+        let currentMode = 'artists'; 
+        let selectedArtist = null;
+        let currentSort = 'count'; 
+        let artistSongSort = 'title';
+        let currentRandomSong = null;
+
+        function initApp() {
+            const cachedSongs = localStorage.getItem('karaoke_cached_songs');
+            if (cachedSongs) {
+                try {
+                    songs = JSON.parse(cachedSongs);
+                    document.getElementById('importBtnLabel').innerText = "Update Playlist";
+                    showArtistsView();
+                    return;
+                } catch (e) {
+                    console.error("Failed to parse cached songs", e);
+                }
+            }
+            render();
+        }
+
+        function toggleArtistSort() {
+            currentSort = currentSort === 'count' ? 'alpha' : 'count';
+            document.getElementById('sortLabel').innerText = currentSort === 'count' ? 'By Count' : 'A-Z';
+            render();
+        }
+
+        function toggleArtistSongSort() {
+            artistSongSort = artistSongSort === 'title' ? 'album' : 'title';
+            document.getElementById('artistSongSortLabel').innerText = artistSongSort === 'title' ? 'Sort: Title (A-Z)' : 'Sort: Album';
+            render();
+        }
+
+        function cleanArtistName(rawName) {
+            return rawName.split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim();
+        }
+
+        function getArtistBase64Image(rawArtistName) {
+            const cleanKey = cleanArtistName(rawArtistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+            return (window.ARTIST_IMAGES && window.ARTIST_IMAGES[cleanKey]) ? window.ARTIST_IMAGES[cleanKey] : null;
+        }
+
+        function getYTId(url) {
+            if (!url || url === '-' || typeof url !== 'string') return null;
+            const match = url.match(/(?:v=|\/|embed\/|shorts\/)([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        function saveState() {
+            localStorage.setItem('karaoke_favs', JSON.stringify([...favorites]));
+            localStorage.setItem('karaoke_recents', JSON.stringify(recents));
+            localStorage.setItem('karaoke_cached_songs', JSON.stringify(songs));
+            document.getElementById('favCount').innerText = favorites.size;
+        }
+
+        function deleteSong(event, id) {
+            event.stopPropagation();
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            if (confirm(`Remove "${song.title}" by ${song.artist} from your playlist?`)) {
+                songs = songs.filter(s => s.id !== id);
+                favorites.delete(id);
+                recents = recents.filter(s => s.id !== id);
+                saveState();
+
+                if (currentMode === 'artist_songs') {
+                    const remainingForArtist = songs.filter(s => s.artist === selectedArtist);
+                    if (remainingForArtist.length === 0) {
+                        showArtistsView();
+                        return;
+                    }
+                }
+                render();
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawRows = XLSX.utils.sheet_to_json(firstSheet);
+
+                songs = rawRows.map((r, i) => {
+                    const artist = r['Artist'] || r['artist'] || '';
+                    const title = r['Song Title'] || r['Title'] || r['title'] || '';
+                    const album = r['Album'] || r['album'] || 'Unknown Album';
+                    const link = r['YouTube Link'] || r['Link'] || r['link'] || '';
+                    const ytId = getYTId(link);
+
+                    return { id: i + 1, artist, title, album, link, ytId };
+                }).filter(s => s.artist && s.title && s.ytId);
+
+                saveState();
+                document.getElementById('importBtnLabel').innerText = "Update Playlist";
+                showArtistsView();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function setActiveTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+                b.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            if (tabId) {
+                const btn = document.getElementById(tabId);
+                if (btn) {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('bg-slate-800', 'text-slate-300');
+                }
+            }
+        }
+
+        function showArtistsView() {
+            currentMode = 'artists';
+            selectedArtist = null;
+            document.getElementById('artistBreadcrumb').classList.add('hidden');
+            document.getElementById('sortBtn').classList.remove('hidden');
+            setActiveTab('tab-artists');
+            render();
+        }
+
+        function showAllSongsView() {
+            currentMode = 'all_songs';
+            selectedArtist = null;
+            document.getElementById('artistBreadcrumb').classList.add('hidden');
+            document.getElementById('sortBtn').classList.add('hidden');
+            setActiveTab('tab-all');
+            render();
+        }
+
+        function showFavsView() {
+            currentMode = 'favs';
+            selectedArtist = null;
+            document.getElementById('artistBreadcrumb').classList.add('hidden');
+            document.getElementById('sortBtn').classList.add('hidden');
+            setActiveTab('tab-favs');
+            render();
+        }
+
+        function showRecentsView() {
+            currentMode = 'recents';
+            selectedArtist = null;
+            document.getElementById('artistBreadcrumb').classList.add('hidden');
+            document.getElementById('sortBtn').classList.add('hidden');
+            setActiveTab('tab-recents');
+            render();
+        }
+
+        // --- UPDATED: Clears search input when selecting an artist ---
+        function selectArtist(artistName) {
+            currentMode = 'artist_songs';
+            selectedArtist = artistName;
+            
+            // Clear the search field so all songs of the artist are displayed
+            document.getElementById('searchInput').value = '';
+
+            document.getElementById('artistBreadcrumb').classList.remove('hidden');
+            document.getElementById('selectedArtistName').innerText = artistName;
+            document.getElementById('sortBtn').classList.add('hidden');
+            setActiveTab(null);
+            render();
+        }
+
+        function handleSearch() { render(); }
+        function executeSearch() { render(); }
+
+        function toggleFav(event, id) {
+            event.stopPropagation();
+            if (favorites.has(id)) favorites.delete(id);
+            else favorites.add(id);
+            saveState();
+            render();
+        }
+
+        function playSong(song) {
+            if (!song || !song.ytId) return;
+            recents = [song, ...recents.filter(s => s.id !== song.id)].slice(0, 30);
+            saveState();
+            window.open(`https://www.youtube.com/watch?v=${song.ytId}`, '_blank', 'noopener,noreferrer');
+        }
+
+        // --- UPDATED: Random Picker displays modal preview instead of immediate opening ---
+        function pickRandomSong() {
+            const availableSongs = songs.filter(s => s.ytId);
+            if (availableSongs.length === 0) {
+                alert("Please load a playlist with valid YouTube links first!");
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * availableSongs.length);
+            currentRandomSong = availableSongs[randomIndex];
+
+            document.getElementById('randomSongTitle').innerText = currentRandomSong.title;
+            document.getElementById('randomSongArtist').innerText = currentRandomSong.artist;
+            document.getElementById('randomSongAlbum').querySelector('span').innerText = currentRandomSong.album;
+
+            const base64Img = getArtistBase64Image(currentRandomSong.artist);
+            const imgContainer = document.getElementById('randomImageContainer');
+            if (base64Img) {
+                imgContainer.innerHTML = `<img src="${base64Img}" alt="${currentRandomSong.artist}" class="w-full h-full object-cover">`;
+            } else {
+                imgContainer.innerHTML = `<i class="fa-solid fa-music text-4xl text-slate-500"></i>`;
+            }
+
+            document.getElementById('randomPlayBtn').onclick = function() {
+                playSong(currentRandomSong);
+                closeRandomModal();
+            };
+
+            document.getElementById('randomModal').classList.remove('hidden');
+        }
+
+        function closeRandomModal() {
+            document.getElementById('randomModal').classList.add('hidden');
+        }
+
+        function render() {
+            const container = document.getElementById('mainContainer');
+            const emptyState = document.getElementById('emptyState');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            document.getElementById('favCount').innerText = favorites.size;
+
+            const availableSongs = songs.filter(s => s.ytId);
+
+            if (availableSongs.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                document.getElementById('emptyMessage').innerText = 'No karaoke songs available. Please load a valid playlist.';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+
+            // --- 1. ARTISTS GRID VIEW ---
+            if (currentMode === 'artists') {
+                const artistMap = {};
+                availableSongs.forEach(s => {
+                    if (!artistMap[s.artist]) artistMap[s.artist] = [];
+                    artistMap[s.artist].push(s);
+                });
+
+                let artistNames = Object.keys(artistMap);
+
+                if (currentSort === 'count') {
+                    artistNames.sort((a, b) => {
+                        const countDiff = artistMap[b].length - artistMap[a].length;
+                        return countDiff !== 0 ? countDiff : a.localeCompare(b);
+                    });
+                } else {
+                    artistNames.sort((a, b) => a.localeCompare(b));
+                }
+
+                if (search) {
+                    artistNames = artistNames.filter(name => 
+                        name.toLowerCase().includes(search) || 
+                        artistMap[name].some(s => s.title.toLowerCase().includes(search))
+                    );
+                }
+
+                if (artistNames.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                    document.getElementById('emptyMessage').innerText = 'No artists matched your search.';
+                    return;
+                }
+
+                const gridHtml = artistNames.map(name => {
+                    const artistSongs = artistMap[name];
+                    const safeName = name.replace(/'/g, "\\'");
+                    const base64Img = getArtistBase64Image(name);
+
+                    const imageHtml = base64Img 
+                        ? `<img src="${base64Img}" alt="${name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`
+                        : `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600 group-hover:text-indigo-400 transition">
+                               <i class="fa-solid fa-user text-5xl"></i>
+                           </div>`;
+
+                    return `
+                        <div onclick="selectArtist('${safeName}')" 
+                             class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition duration-200 flex flex-col group relative">
+                            <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
+                                ${imageHtml}
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-indigo-600/90 text-xs font-bold px-2 py-0.5 rounded-full text-white shadow">
+                                    ${artistSongs.length} ${artistSongs.length === 1 ? 'song' : 'songs'}
+                                </div>
+                            </div>
+                            <div class="p-3 flex items-center justify-between">
+                                <h3 class="font-bold text-sm text-slate-100 group-hover:text-indigo-400 transition truncate">${name}</h3>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-indigo-400"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${gridHtml}</div>`;
+                return;
+            }
+
+            // --- 2. SINGLE ARTIST SONGS VIEW ---
+            if (currentMode === 'artist_songs') {
+                let artistSongs = availableSongs.filter(s => s.artist === selectedArtist);
+
+                if (search) {
+                    artistSongs = artistSongs.filter(s => s.title.toLowerCase().includes(search) || s.album.toLowerCase().includes(search));
+                }
+
+                if (artistSongSort === 'title') {
+                    artistSongs.sort((a, b) => a.title.localeCompare(b.title));
+                } else if (artistSongSort === 'album') {
+                    artistSongs.sort((a, b) => a.album.localeCompare(b.album) || a.title.localeCompare(b.title));
+                }
+
+                document.getElementById('selectedArtistCount').innerText = `${artistSongs.length} ${artistSongs.length === 1 ? 'song' : 'songs'}`;
+
+                if (artistSongs.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                    document.getElementById('emptyMessage').innerText = 'No songs matched your search.';
+                    return;
+                }
+
+                const listHtml = artistSongs.map((song, index) => {
+                    const isFav = favorites.has(song.id);
+                    return `
+                        <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" 
+                             class="glass rounded-xl p-3.5 px-4 flex items-center justify-between cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition duration-150 group">
+                            
+                            <div class="flex items-center gap-3.5 min-w-0 pr-4">
+                                <span class="text-xs font-semibold text-slate-500 w-6 text-right group-hover:text-indigo-400 transition">${index + 1}</span>
+                                <i class="fa-solid fa-circle-play text-indigo-400 text-lg opacity-80 group-hover:opacity-100 group-hover:scale-110 transition shrink-0"></i>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="font-semibold text-sm text-slate-100 group-hover:text-indigo-300 transition truncate">${song.title}</span>
+                                    <span class="text-xs text-slate-400 flex items-center gap-1 font-medium truncate"><i class="fa-solid fa-compact-disc text-[10px] text-slate-500"></i> ${song.album}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button onclick="toggleFav(event, ${song.id})" 
+                                        class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-pink-400 transition" 
+                                        title="${isFav ? 'Remove from Favorites' : 'Add to Favorites'}">
+                                    <i class="fa-${isFav ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i>
+                                </button>
+                                <button onclick="deleteSong(event, ${song.id})" 
+                                        class="p-2 rounded-lg bg-slate-800/80 hover:bg-red-900/50 text-slate-400 hover:text-red-400 transition" 
+                                        title="Delete song">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                                <span class="hidden sm:flex items-center gap-1.5 text-xs bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-semibold px-2.5 py-1.5 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition">
+                                    Play <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="max-w-4xl mx-auto flex flex-col gap-2">${listHtml}</div>`;
+                return;
+            }
+
+            // --- 3. ALL SONGS / FAVS / RECENTS VIEWS ---
+            let songList = [];
+            if (currentMode === 'favs') {
+                songList = availableSongs.filter(s => favorites.has(s.id));
+            } else if (currentMode === 'recents') {
+                songList = recents.filter(s => s.ytId);
+            } else {
+                songList = [...availableSongs];
+            }
+
+            if (search) {
+                songList = songList.filter(s => 
+                    s.artist.toLowerCase().includes(search) || 
+                    s.title.toLowerCase().includes(search) ||
+                    s.album.toLowerCase().includes(search)
+                );
+            }
+
+            if (songList.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                document.getElementById('emptyMessage').innerText = 'No karaoke songs found in this view.';
+                return;
+            }
+
+            const gridHtml = songList.map(song => {
+                const isFav = favorites.has(song.id);
+                const base64Img = getArtistBase64Image(song.artist);
+
+                const imageHtml = base64Img 
+                    ? `<img src="${base64Img}" alt="${song.artist}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`
+                    : `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600 group-hover:text-indigo-400 transition">
+                           <i class="fa-solid fa-music text-4xl"></i>
+                       </div>`;
+
+                return `
+                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" 
+                         class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition duration-200 flex flex-col group relative">
+                        <div class="relative h-36 w-full bg-slate-900 overflow-hidden">
+                            ${imageHtml}
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                            
+                            <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
+                                <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 hover:bg-slate-900 transition">
+                                    <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart ${isFav ? 'text-pink-500' : 'text-slate-300'} text-sm"></i>
+                                </button>
+                                <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 hover:bg-red-900/80 transition text-slate-300 hover:text-red-400">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div class="absolute bottom-2 left-2 bg-indigo-600/90 text-[10px] font-bold px-2 py-0.5 rounded text-white flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-play"></i> Play Karaoke
+                            </div>
+                        </div>
+                        <div class="p-3 flex flex-col justify-between flex-1">
+                            <div>
+                                <h3 class="font-bold text-sm line-clamp-1 text-slate-100 group-hover:text-indigo-400 transition">${song.title}</h3>
+                                <p class="text-xs text-slate-400 line-clamp-1 mt-0.5 font-medium">${song.artist}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${gridHtml}</div>`;
+        }
+    </script>
+</body>
+</html>
