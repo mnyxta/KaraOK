@@ -90,7 +90,7 @@
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>GitHub Database Sync</h3>
-            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to GitHub.</p>
+            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync songs/favorites to GitHub[cite: 1].</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -168,7 +168,6 @@
     </div>
 
     <script>
-        // Ensure image dictionary exists gracefully even if images_data.js isn't loaded
         window.ARTIST_IMAGES = window.ARTIST_IMAGES || {};
 
         let songs = [];
@@ -203,6 +202,11 @@
 
             updateAdminUI();
 
+            // Fetch remote favorites if logged in as Admin
+            if (hasAdminAccess()) {
+                await fetchAdminFavorites();
+            }
+
             try {
                 const response = await fetch('songs.json?cache_bust=' + Date.now());
                 if (response.ok) {
@@ -221,7 +225,50 @@
             showArtistsView();
         }
 
-        // Automatic GitHub sync for songs AND images_data.js
+        // Fetch Favorites tied to your GitHub Repository
+        async function fetchAdminFavorites() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/favorites.json`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const remoteFavs = JSON.parse(contentStr);
+                    if (Array.isArray(remoteFavs)) {
+                        // Merge remote favorites with any existing local ones
+                        remoteFavs.forEach(id => favorites.add(id));
+                        saveState();
+                    }
+                }
+            } catch (e) {
+                console.warn("No remote favorites found or fetch failed. Will create on next save.", e);
+            }
+        }
+
+        // Sync Favorites specifically to favorites.json on GitHub
+        async function saveFavsToGitHub() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const favArray = Array.from(favorites);
+                await updateGitHubFile(owner, repo, token, 'favorites.json', JSON.stringify(favArray, null, 2));
+            } catch (err) {
+                console.error("Failed to sync favorites to GitHub:", err);
+            }
+        }
+
+        // Automatic GitHub sync for songs and images_data.js
         async function saveToGitHub(newSongsList, newImageData = null) {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
@@ -240,10 +287,8 @@
             toastText.innerText = "Syncing with GitHub...";
 
             try {
-                // 1. Sync songs.json
                 await updateGitHubFile(owner, repo, token, 'songs.json', JSON.stringify(newSongsList, null, 2));
 
-                // 2. Sync images_data.js if image data updated
                 if (newImageData) {
                     const jsContent = `window.ARTIST_IMAGES = ${JSON.stringify(window.ARTIST_IMAGES, null, 2)};`;
                     await updateGitHubFile(owner, repo, token, 'images_data.js', jsContent);
@@ -289,11 +334,17 @@
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
 
-        function saveSettings() {
+        async function saveSettings() {
             localStorage.setItem('gh_owner', document.getElementById('ghOwner').value.trim());
             localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
             localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
-            updateAdminUI(); closeSettingsModal(); render();
+            
+            updateAdminUI(); 
+            if (hasAdminAccess()) {
+                await fetchAdminFavorites();
+            }
+            closeSettingsModal(); 
+            render();
         }
 
         function openAddSongModal() {
@@ -393,6 +444,7 @@
                 recents = recents.filter(s => s.id !== id);
                 saveState();
                 saveToGitHub(songs);
+                if (hasAdminAccess()) saveFavsToGitHub();
 
                 if (currentMode === 'artist_songs') {
                     const remaining = songs.filter(s => s.artist === selectedArtist);
@@ -460,7 +512,12 @@
             event.stopPropagation();
             if (favorites.has(id)) favorites.delete(id);
             else favorites.add(id);
-            saveState(); render();
+            
+            saveState();
+            if (hasAdminAccess()) {
+                saveFavsToGitHub();
+            }
+            render();
         }
 
         function playSong(song) {
