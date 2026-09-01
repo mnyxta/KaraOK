@@ -24,13 +24,13 @@
                 <i class="fa-solid fa-microphone-lines text-pink-500"></i> KARAOKE HUB
             </h1>
             <div class="flex items-center gap-2">
-                <!-- Import Button (Only shown to authenticated admins)[cite: 1] -->
+                <!-- Import Button -->
                 <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-file-import"></i> <span>Import Playlist</span>
                     <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
 
-                <!-- Add Song Button (Only shown to authenticated admins) -->
+                <!-- Add Song Button -->
                 <button id="addSongBtn" onclick="openAddSongModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Add Song
                 </button>
@@ -48,10 +48,9 @@
         <div class="relative w-full md:w-96 flex items-center gap-1.5">
             <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="handleSearch()" onkeydown="if(event.key==='Enter') executeSearch()" placeholder="Search artist, song, or album..." 
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search artist, song, or album..." 
                        class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition">
             </div>
-            <button onclick="executeSearch()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2.5 rounded-xl font-semibold transition shrink-0">Search</button>
         </div>
 
         <div class="flex items-center gap-2 w-full md:w-auto justify-center overflow-x-auto hide-scrollbar">
@@ -91,7 +90,7 @@
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>GitHub Database Sync</h3>
-            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to <code class="text-indigo-300">songs.json</code>[cite: 1].</p>
+            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to GitHub.</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -103,7 +102,7 @@
                     <input type="text" id="ghRepo" placeholder="e.g. karaoke-hub" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
                 </div>
                 <div>
-                    <label class="block text-slate-300 mb-1 font-semibold">Personal Access Token (Fine-Grained)</label>
+                    <label class="block text-slate-300 mb-1 font-semibold">Personal Access Token</label>
                     <input type="password" id="ghToken" placeholder="github_pat_..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
                 </div>
             </div>
@@ -120,7 +119,7 @@
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeAddSongModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-music text-indigo-400 mr-2"></i>Add New Song</h3>
-            <p class="text-xs text-slate-400 mb-4">Manually add a track to your library and upload an artist/album cover image.</p>
+            <p class="text-xs text-slate-400 mb-4">Manually add a track to your library and upload an artist cover image.</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -140,7 +139,7 @@
                     <input type="text" id="newLink" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
                 </div>
                 <div>
-                    <label class="block text-slate-300 mb-1 font-semibold">Artist / Cover Image (Optional)</label>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Image (Optional)</label>
                     <input type="file" id="newImageFile" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
                 </div>
             </div>
@@ -169,6 +168,9 @@
     </div>
 
     <script>
+        // Ensure image dictionary exists gracefully even if images_data.js isn't loaded
+        window.ARTIST_IMAGES = window.ARTIST_IMAGES || {};
+
         let songs = [];
         let favorites = new Set(JSON.parse(localStorage.getItem('karaoke_favs') || '[]'));
         let recents = JSON.parse(localStorage.getItem('karaoke_recents') || '[]');
@@ -186,15 +188,11 @@
             const isAdmin = hasAdminAccess();
 
             if (isAdmin) {
-                importBtn.classList.remove('hidden');
-                importBtn.classList.add('flex');
-                addSongBtn.classList.remove('hidden');
-                addSongBtn.classList.add('flex');
+                importBtn.classList.remove('hidden'); importBtn.classList.add('flex');
+                addSongBtn.classList.remove('hidden'); addSongBtn.classList.add('flex');
             } else {
-                importBtn.classList.add('hidden');
-                importBtn.classList.remove('flex');
-                addSongBtn.classList.add('hidden');
-                addSongBtn.classList.remove('flex');
+                importBtn.classList.add('hidden'); importBtn.classList.remove('flex');
+                addSongBtn.classList.add('hidden'); addSongBtn.classList.remove('flex');
             }
         }
 
@@ -213,19 +211,18 @@
                     return;
                 }
             } catch (e) {
-                console.warn("Could not fetch hosted songs.json, trying local fallback", e);
+                console.warn("Could not fetch songs.json, checking cached memory.", e);
             }
 
             const cached = localStorage.getItem('karaoke_cached_songs');
             if (cached) {
-                songs = JSON.parse(cached);
-                showArtistsView();
-            } else {
-                render();
+                try { songs = JSON.parse(cached); } catch(e) { songs = []; }
             }
+            showArtistsView();
         }
 
-        async function saveToGitHub(newSongsList) {
+        // Automatic GitHub sync for songs AND images_data.js
+        async function saveToGitHub(newSongsList, newImageData = null) {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
             const token = localStorage.getItem('gh_token');
@@ -233,52 +230,60 @@
             localStorage.setItem('karaoke_cached_songs', JSON.stringify(newSongsList));
 
             if (!owner || !repo || !token) {
-                console.warn("GitHub sync credentials missing. Edits saved to current browser only.");
+                console.warn("GitHub credentials missing. Saved locally in current browser.");
                 return;
             }
 
             const toast = document.getElementById('syncToast');
             const toastText = document.getElementById('syncToastText');
-            toast.classList.remove('hidden');
-            toast.classList.add('flex');
-            toastText.innerText = "Syncing changes to GitHub...";
+            toast.classList.remove('hidden'); toast.classList.add('flex');
+            toastText.innerText = "Syncing with GitHub...";
 
             try {
-                const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/songs.json`, {
-                    headers: { 'Authorization': `token ${token}` }
-                });
+                // 1. Sync songs.json
+                await updateGitHubFile(owner, repo, token, 'songs.json', JSON.stringify(newSongsList, null, 2));
 
-                let sha = "";
-                if (getFile.ok) {
-                    const data = await getFile.json();
-                    sha = data.sha;
+                // 2. Sync images_data.js if image data updated
+                if (newImageData) {
+                    const jsContent = `window.ARTIST_IMAGES = ${JSON.stringify(window.ARTIST_IMAGES, null, 2)};`;
+                    await updateGitHubFile(owner, repo, token, 'images_data.js', jsContent);
                 }
 
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(newSongsList, null, 2))));
-                const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/songs.json`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Update songs.json via Karaoke Web App',
-                        content: content,
-                        sha: sha !== "" ? sha : undefined
-                    })
-                });
-
-                if (putResponse.ok) {
-                    toastText.innerText = "Synced to GitHub!";
-                    setTimeout(() => toast.classList.add('hidden'), 2500);
-                } else {
-                    throw new Error('API returned ' + putResponse.status);
-                }
+                toastText.innerText = "Synced to GitHub!";
+                setTimeout(() => toast.classList.add('hidden'), 2500);
             } catch (err) {
                 console.error("GitHub Sync Failed:", err);
-                toastText.innerText = "Sync failed. Check API Token.";
+                toastText.innerText = "Sync failed. Check Token settings.";
                 setTimeout(() => toast.classList.add('hidden'), 4000);
             }
+        }
+
+        async function updateGitHubFile(owner, repo, token, filePath, stringContent) {
+            const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+
+            let sha = "";
+            if (getFile.ok) {
+                const data = await getFile.json();
+                sha = data.sha;
+            }
+
+            const content = btoa(unescape(encodeURIComponent(stringContent)));
+            const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Update ${filePath} via Karaoke Hub`,
+                    content: content,
+                    sha: sha !== "" ? sha : undefined
+                })
+            });
+
+            if (!putResponse.ok) throw new Error(`API returned status ${putResponse.status}`);
         }
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
@@ -288,10 +293,7 @@
             localStorage.setItem('gh_owner', document.getElementById('ghOwner').value.trim());
             localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
             localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
-            
-            updateAdminUI();
-            closeSettingsModal();
-            render();
+            updateAdminUI(); closeSettingsModal(); render();
         }
 
         function openAddSongModal() {
@@ -303,9 +305,7 @@
             document.getElementById('addSongModal').classList.remove('hidden');
         }
 
-        function closeAddSongModal() {
-            document.getElementById('addSongModal').classList.add('hidden');
-        }
+        function closeAddSongModal() { document.getElementById('addSongModal').classList.add('hidden'); }
 
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -326,47 +326,52 @@
             const imageInput = document.getElementById('newImageFile');
 
             if (!artist || !title || !link) {
-                alert("Please fill in the Artist, Title, and YouTube Link.");
+                alert("Please fill in Artist, Title, and YouTube Link.");
                 return;
             }
 
             const ytId = getYTId(link);
             if (!ytId) {
-                alert("Invalid YouTube Link. Please provide a valid URL or 11-character video ID.");
+                alert("Invalid YouTube link. Please provide a valid link or 11-character video ID.");
                 return;
             }
 
+            let hasNewImage = false;
             if (imageInput.files && imageInput.files[0]) {
                 try {
                     const base64Data = await fileToBase64(imageInput.files[0]);
                     const cleanKey = cleanArtistName(artist).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
-                    
-                    window.ARTIST_IMAGES = window.ARTIST_IMAGES || {};
                     window.ARTIST_IMAGES[cleanKey] = base64Data;
+                    hasNewImage = true;
                 } catch (e) {
-                    console.error("Image processing failed:", e);
+                    console.error("Image read failed:", e);
                 }
             }
 
-            const newId = songs.length > 0 ? Math.max(...songs.map(s => s.id)) + 1 : 1;
+            const newId = songs.length > 0 ? Math.max(...songs.map(s => Number(s.id) || 0)) + 1 : 1;
             const newSong = { id: newId, artist, title, album, link, ytId };
             songs.push(newSong);
 
             saveState();
-            saveToGitHub(songs);
+            saveToGitHub(songs, hasNewImage);
             closeAddSongModal();
             render();
         }
 
-        function cleanArtistName(rawName) { return rawName.split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim(); }
+        function cleanArtistName(rawName) { 
+            return (rawName || '').split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim(); 
+        }
+
         function getArtistBase64Image(rawArtistName) {
+            if (!rawArtistName) return null;
             const cleanKey = cleanArtistName(rawArtistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
             return (window.ARTIST_IMAGES && window.ARTIST_IMAGES[cleanKey]) ? window.ARTIST_IMAGES[cleanKey] : null;
         }
+
         function getYTId(url) {
             if (!url || typeof url !== 'string') return null;
             const match = url.match(/(?:v=|\/|embed\/|shorts\/)([\w-]{11})/);
-            return match ? match[1] : null;
+            return match ? match[1] : (url.length === 11 ? url : null);
         }
 
         function saveState() {
@@ -377,12 +382,12 @@
 
         function deleteSong(event, id) {
             event.stopPropagation();
-            if (!hasAdminAccess()) return[cite: 1];
+            if (!hasAdminAccess()) return;
 
             const song = songs.find(s => s.id === id);
             if (!song) return;
 
-            if (confirm(`Remove "${song.title}" by ${song.artist} from database?`)) {
+            if (confirm(`Remove "${song.title}" by ${song.artist}?`)) {
                 songs = songs.filter(s => s.id !== id);
                 favorites.delete(id);
                 recents = recents.filter(s => s.id !== id);
@@ -398,7 +403,7 @@
         }
 
         function handleFileSelect(event) {
-            if (!hasAdminAccess()) return[cite: 1];
+            if (!hasAdminAccess()) return;
             const file = event.target.files[0];
             if (!file) return;
 
@@ -410,10 +415,10 @@
                 const rawRows = XLSX.utils.sheet_to_json(firstSheet);
 
                 songs = rawRows.map((r, i) => {
-                    const artist = r['Artist'] || r['artist'] || '';
-                    const title = r['Song Title'] || r['Title'] || r['title'] || '';
-                    const album = r['Album'] || r['album'] || 'Unknown Album';
-                    const link = r['YouTube Link'] || r['Link'] || r['link'] || '';
+                    const artist = String(r['Artist'] || r['artist'] || '').trim();
+                    const title = String(r['Song Title'] || r['Title'] || r['title'] || '').trim();
+                    const album = String(r['Album'] || r['album'] || 'Single').trim();
+                    const link = String(r['YouTube Link'] || r['Link'] || r['link'] || '').trim();
                     const ytId = getYTId(link);
 
                     return { id: i + 1, artist, title, album, link, ytId };
@@ -450,7 +455,6 @@
         }
 
         function handleSearch() { render(); }
-        function executeSearch() { render(); }
 
         function toggleFav(event, id) {
             event.stopPropagation();
@@ -468,7 +472,7 @@
 
         function pickRandomSong() {
             const available = songs.filter(s => s.ytId);
-            if (available.length === 0) return alert("Please load a playlist with YouTube links first!");
+            if (available.length === 0) return alert("Playlist empty!");
             const currentRandomSong = available[Math.floor(Math.random() * available.length)];
 
             document.getElementById('randomSongTitle').innerText = currentRandomSong.title;
@@ -490,18 +494,18 @@
         function render() {
             const container = document.getElementById('mainContainer');
             const emptyState = document.getElementById('emptyState');
-            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
             document.getElementById('favCount').innerText = favorites.size;
             const isAdmin = hasAdminAccess();
 
-            const availableSongs = songs.filter(s => s.ytId);
+            const availableSongs = songs.filter(s => s && s.ytId);
 
             if (availableSongs.length === 0) {
                 container.innerHTML = '';
                 emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
                 document.getElementById('emptyMessage').innerText = isAdmin 
-                    ? 'No songs in database. Import a playlist to get started.'
-                    : 'No songs loaded in database.';
+                    ? 'No songs loaded. Add a song or import a playlist.'
+                    : 'No songs available.';
                 return;
             }
 
@@ -509,7 +513,9 @@
 
             if (currentMode === 'artists') {
                 const artistMap = {};
-                availableSongs.forEach(s => { (artistMap[s.artist] = artistMap[s.artist] || []).push(s); });
+                availableSongs.forEach(s => { 
+                    if (s.artist) (artistMap[s.artist] = artistMap[s.artist] || []).push(s); 
+                });
                 let names = Object.keys(artistMap).sort((a,b) => artistMap[b].length - artistMap[a].length);
 
                 if (search) {
@@ -523,8 +529,9 @@
                         ? `<img src="${base64Img}" class="w-full h-full object-cover group-hover:scale-105 transition">`
                         : `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-user text-5xl"></i></div>`;
 
+                    const escapedName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     return `
-                        <div onclick="selectArtist('${name.replace(/'/g, "\\'")}')" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
+                        <div onclick="selectArtist('${escapedName}')" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
                             <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
                                 ${imageHtml}
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
@@ -571,7 +578,7 @@
                          : [...availableSongs];
 
             if (search) {
-                songList = songList.filter(s => s.artist.toLowerCase().includes(search) || s.title.toLowerCase().includes(search) || s.album.toLowerCase().includes(search));
+                songList = songList.filter(s => (s.artist || '').toLowerCase().includes(search) || (s.title || '').toLowerCase().includes(search) || (s.album || '').toLowerCase().includes(search));
             }
 
             const gridHtml = songList.map(song => {
