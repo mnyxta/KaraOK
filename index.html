@@ -24,11 +24,16 @@
                 <i class="fa-solid fa-microphone-lines text-pink-500"></i> KARAOKE HUB
             </h1>
             <div class="flex items-center gap-2">
-                <!-- Import Button (Only shown to authenticated admins) -->
+                <!-- Import Button (Only shown to authenticated admins)[cite: 1] -->
                 <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
-                    <i class="fa-solid fa-file-import"></i> <span id="importBtnLabel">Import Playlist</span>
+                    <i class="fa-solid fa-file-import"></i> <span>Import Playlist</span>
                     <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
+
+                <!-- Add Song Button (Only shown to authenticated admins) -->
+                <button id="addSongBtn" onclick="openAddSongModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Song
+                </button>
 
                 <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-shuffle"></i> Random
@@ -86,7 +91,7 @@
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>GitHub Database Sync</h3>
-            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to <code class="text-indigo-300">songs.json</code>.</p>
+            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to <code class="text-indigo-300">songs.json</code>[cite: 1].</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -106,6 +111,43 @@
             <div class="flex gap-2 mt-6">
                 <button onclick="saveSettings()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-semibold">Save Settings</button>
                 <button onclick="closeSettingsModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Song Modal -->
+    <div id="addSongModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeAddSongModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-music text-indigo-400 mr-2"></i>Add New Song</h3>
+            <p class="text-xs text-slate-400 mb-4">Manually add a track to your library and upload an artist/album cover image.</p>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Name *</label>
+                    <input type="text" id="newArtist" placeholder="e.g. Queen" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Song Title *</label>
+                    <input type="text" id="newTitle" placeholder="e.g. Bohemian Rhapsody" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Album Name</label>
+                    <input type="text" id="newAlbum" placeholder="e.g. A Night at the Opera" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">YouTube URL or Video ID *</label>
+                    <input type="text" id="newLink" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist / Cover Image (Optional)</label>
+                    <input type="file" id="newImageFile" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleAddSong()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-xl text-xs font-semibold">Add & Sync</button>
+                <button onclick="closeAddSongModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
             </div>
         </div>
     </div>
@@ -140,12 +182,19 @@
 
         function updateAdminUI() {
             const importBtn = document.getElementById('importBtn');
-            if (hasAdminAccess()) {
+            const addSongBtn = document.getElementById('addSongBtn');
+            const isAdmin = hasAdminAccess();
+
+            if (isAdmin) {
                 importBtn.classList.remove('hidden');
                 importBtn.classList.add('flex');
+                addSongBtn.classList.remove('hidden');
+                addSongBtn.classList.add('flex');
             } else {
                 importBtn.classList.add('hidden');
                 importBtn.classList.remove('flex');
+                addSongBtn.classList.add('hidden');
+                addSongBtn.classList.remove('flex');
             }
         }
 
@@ -245,6 +294,70 @@
             render();
         }
 
+        function openAddSongModal() {
+            document.getElementById('newArtist').value = '';
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newAlbum').value = '';
+            document.getElementById('newLink').value = '';
+            document.getElementById('newImageFile').value = '';
+            document.getElementById('addSongModal').classList.remove('hidden');
+        }
+
+        function closeAddSongModal() {
+            document.getElementById('addSongModal').classList.add('hidden');
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleAddSong() {
+            if (!hasAdminAccess()) return;
+
+            const artist = document.getElementById('newArtist').value.trim();
+            const title = document.getElementById('newTitle').value.trim();
+            const album = document.getElementById('newAlbum').value.trim() || 'Single';
+            const link = document.getElementById('newLink').value.trim();
+            const imageInput = document.getElementById('newImageFile');
+
+            if (!artist || !title || !link) {
+                alert("Please fill in the Artist, Title, and YouTube Link.");
+                return;
+            }
+
+            const ytId = getYTId(link);
+            if (!ytId) {
+                alert("Invalid YouTube Link. Please provide a valid URL or 11-character video ID.");
+                return;
+            }
+
+            if (imageInput.files && imageInput.files[0]) {
+                try {
+                    const base64Data = await fileToBase64(imageInput.files[0]);
+                    const cleanKey = cleanArtistName(artist).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+                    
+                    window.ARTIST_IMAGES = window.ARTIST_IMAGES || {};
+                    window.ARTIST_IMAGES[cleanKey] = base64Data;
+                } catch (e) {
+                    console.error("Image processing failed:", e);
+                }
+            }
+
+            const newId = songs.length > 0 ? Math.max(...songs.map(s => s.id)) + 1 : 1;
+            const newSong = { id: newId, artist, title, album, link, ytId };
+            songs.push(newSong);
+
+            saveState();
+            saveToGitHub(songs);
+            closeAddSongModal();
+            render();
+        }
+
         function cleanArtistName(rawName) { return rawName.split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim(); }
         function getArtistBase64Image(rawArtistName) {
             const cleanKey = cleanArtistName(rawArtistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
@@ -264,7 +377,7 @@
 
         function deleteSong(event, id) {
             event.stopPropagation();
-            if (!hasAdminAccess()) return;
+            if (!hasAdminAccess()) return[cite: 1];
 
             const song = songs.find(s => s.id === id);
             if (!song) return;
@@ -285,7 +398,7 @@
         }
 
         function handleFileSelect(event) {
-            if (!hasAdminAccess()) return;
+            if (!hasAdminAccess()) return[cite: 1];
             const file = event.target.files[0];
             if (!file) return;
 
