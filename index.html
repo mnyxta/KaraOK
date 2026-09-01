@@ -24,7 +24,8 @@
                 <i class="fa-solid fa-microphone-lines text-pink-500"></i> KARAOKE HUB
             </h1>
             <div class="flex items-center gap-2">
-                <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition flex items-center gap-2">
+                <!-- Import Button (Only shown to authenticated admins) -->
+                <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-file-import"></i> <span id="importBtnLabel">Import Playlist</span>
                     <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
@@ -85,7 +86,7 @@
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>GitHub Database Sync</h3>
-            <p class="text-xs text-slate-400 mb-4">Enter your GitHub credentials once to automatically save edits back to your repository's <code class="text-indigo-300">songs.json</code> file.</p>
+            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync changes back to <code class="text-indigo-300">songs.json</code>.</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -132,13 +133,29 @@
         let currentMode = 'artists'; 
         let selectedArtist = null;
 
+        function hasAdminAccess() {
+            const token = localStorage.getItem('gh_token');
+            return !!(token && token.trim().length > 0);
+        }
+
+        function updateAdminUI() {
+            const importBtn = document.getElementById('importBtn');
+            if (hasAdminAccess()) {
+                importBtn.classList.remove('hidden');
+                importBtn.classList.add('flex');
+            } else {
+                importBtn.classList.add('hidden');
+                importBtn.classList.remove('flex');
+            }
+        }
+
         async function initApp() {
-            // Fill settings modal inputs if present
             document.getElementById('ghOwner').value = localStorage.getItem('gh_owner') || '';
             document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
             document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
 
-            // 1. Load songs.json from hosted root repo
+            updateAdminUI();
+
             try {
                 const response = await fetch('songs.json?cache_bust=' + Date.now());
                 if (response.ok) {
@@ -150,7 +167,6 @@
                 console.warn("Could not fetch hosted songs.json, trying local fallback", e);
             }
 
-            // 2. Fallback to cached songs in localStorage
             const cached = localStorage.getItem('karaoke_cached_songs');
             if (cached) {
                 songs = JSON.parse(cached);
@@ -165,7 +181,6 @@
             const repo = localStorage.getItem('gh_repo');
             const token = localStorage.getItem('gh_token');
 
-            // Save local cache immediately
             localStorage.setItem('karaoke_cached_songs', JSON.stringify(newSongsList));
 
             if (!owner || !repo || !token) {
@@ -180,7 +195,6 @@
             toastText.innerText = "Syncing changes to GitHub...";
 
             try {
-                // 1. Fetch current file SHA from GitHub API
                 const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/songs.json`, {
                     headers: { 'Authorization': `token ${token}` }
                 });
@@ -191,7 +205,6 @@
                     sha = data.sha;
                 }
 
-                // 2. Write updated array back to songs.json via GitHub API
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(newSongsList, null, 2))));
                 const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/songs.json`, {
                     method: 'PUT',
@@ -226,8 +239,10 @@
             localStorage.setItem('gh_owner', document.getElementById('ghOwner').value.trim());
             localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
             localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
+            
+            updateAdminUI();
             closeSettingsModal();
-            alert("Sync Settings saved!");
+            render();
         }
 
         function cleanArtistName(rawName) { return rawName.split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim(); }
@@ -249,6 +264,8 @@
 
         function deleteSong(event, id) {
             event.stopPropagation();
+            if (!hasAdminAccess()) return;
+
             const song = songs.find(s => s.id === id);
             if (!song) return;
 
@@ -257,7 +274,7 @@
                 favorites.delete(id);
                 recents = recents.filter(s => s.id !== id);
                 saveState();
-                saveToGitHub(songs); // Triggers GitHub API sync
+                saveToGitHub(songs);
 
                 if (currentMode === 'artist_songs') {
                     const remaining = songs.filter(s => s.artist === selectedArtist);
@@ -268,6 +285,7 @@
         }
 
         function handleFileSelect(event) {
+            if (!hasAdminAccess()) return;
             const file = event.target.files[0];
             if (!file) return;
 
@@ -289,7 +307,7 @@
                 }).filter(s => s.artist && s.title && s.ytId);
 
                 saveState();
-                saveToGitHub(songs); // Sync full imported array to GitHub
+                saveToGitHub(songs);
                 showArtistsView();
             };
             reader.readAsArrayBuffer(file);
@@ -361,13 +379,16 @@
             const emptyState = document.getElementById('emptyState');
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
             document.getElementById('favCount').innerText = favorites.size;
+            const isAdmin = hasAdminAccess();
 
             const availableSongs = songs.filter(s => s.ytId);
 
             if (availableSongs.length === 0) {
                 container.innerHTML = '';
                 emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
-                document.getElementById('emptyMessage').innerText = 'No songs in database. Import a playlist to get started.';
+                document.getElementById('emptyMessage').innerText = isAdmin 
+                    ? 'No songs in database. Import a playlist to get started.'
+                    : 'No songs loaded in database.';
                 return;
             }
 
@@ -424,7 +445,7 @@
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-pink-400"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
-                            <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            ${isAdmin ? `<button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
                         </div>
                     </div>`).join('');
 
@@ -453,7 +474,7 @@
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
                             <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
                                 <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-pink-500"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
-                                <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                ${isAdmin ? `<button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
                             </div>
                         </div>
                         <div class="p-3 flex flex-col justify-between flex-1">
