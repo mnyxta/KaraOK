@@ -202,7 +202,6 @@
 
             updateAdminUI();
 
-            // Fetch remote favorites if logged in as Admin
             if (hasAdminAccess()) {
                 await fetchAdminFavorites();
             }
@@ -225,7 +224,7 @@
             showArtistsView();
         }
 
-        // Fetch Favorites tied to your GitHub Repository
+        // Fetch Remote Favorites directly from GitHub with cache-busting & exact overwrite
         async function fetchAdminFavorites() {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
@@ -234,7 +233,7 @@
             if (!owner || !repo || !token) return;
 
             try {
-                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/favorites.json`, {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/favorites.json?cache_bust=` + Date.now(), {
                     headers: { 'Authorization': `token ${token}` }
                 });
                 if (res.ok) {
@@ -242,17 +241,17 @@
                     const contentStr = decodeURIComponent(escape(atob(data.content)));
                     const remoteFavs = JSON.parse(contentStr);
                     if (Array.isArray(remoteFavs)) {
-                        // Merge remote favorites with any existing local ones
-                        remoteFavs.forEach(id => favorites.add(id));
+                        favorites = new Set(remoteFavs);
                         saveState();
+                        render();
                     }
                 }
             } catch (e) {
-                console.warn("No remote favorites found or fetch failed. Will create on next save.", e);
+                console.warn("Could not fetch remote favorites.", e);
             }
         }
 
-        // Sync Favorites specifically to favorites.json on GitHub
+        // Sync Favorites to favorites.json on GitHub
         async function saveFavsToGitHub() {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
@@ -268,7 +267,6 @@
             }
         }
 
-        // Automatic GitHub sync for songs and images_data.js
         async function saveToGitHub(newSongsList, newImageData = null) {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
