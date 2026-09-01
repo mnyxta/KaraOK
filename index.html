@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karaoke Song Picker</title>
+    <title>KaraOK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,9 +20,11 @@
     <!-- Header -->
     <header class="glass sticky top-0 z-20 px-4 py-3 flex flex-col md:flex-row gap-3 items-center justify-between shadow-xl">
         <div class="flex items-center gap-3 w-full md:w-auto justify-between">
-            <h1 class="text-xl font-bold tracking-wider text-indigo-400 flex items-center gap-2">
-                <i class="fa-solid fa-microphone-lines text-pink-500"></i> KARAOKE HUB
-            </h1>
+            <!-- App Name & Logo (Clickable to jump to Artists view) -->
+            <button onclick="showArtistsView()" class="text-xl font-bold tracking-wider text-indigo-400 flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
+                <i class="fa-solid fa-microphone-lines text-pink-500"></i> KaraOK
+            </button>
+            
             <div class="flex items-center gap-2">
                 <!-- Import Button -->
                 <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
@@ -36,11 +38,15 @@
                 </button>
 
                 <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-shuffle"></i> Random
+                    <i class="fa-solid fa-shuffle"></i> Random Song
+                </button>
+
+                <button onclick="pickRandomArtist()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-user-astronaut"></i> Random Artist
                 </button>
 
                 <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-gear"></i> Sync Settings
+                    <i class="fa-solid fa-right-to-bracket"></i> Login
                 </button>
             </div>
         </div>
@@ -89,8 +95,8 @@
     <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
         <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
             <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>GitHub Database Sync</h3>
-            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync songs/favorites to GitHub[cite: 1].</p>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-right-to-bracket text-indigo-400 mr-2"></i>Admin Login & Database Sync</h3>
+            <p class="text-xs text-slate-400 mb-4">Enter your GitHub Access Token to enable editing features and sync songs/favorites to GitHub.</p>
             
             <div class="space-y-3 text-xs">
                 <div>
@@ -151,18 +157,74 @@
         </div>
     </div>
 
+    <!-- Edit Song Modal -->
+    <div id="editSongModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeEditSongModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-pen-to-square text-indigo-400 mr-2"></i>Edit Song</h3>
+            <p class="text-xs text-slate-400 mb-4">Modify track metadata and sync to your library.</p>
+            <input type="hidden" id="editSongId">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Name *</label>
+                    <input type="text" id="editArtist" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Song Title *</label>
+                    <input type="text" id="editTitle" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Album Name</label>
+                    <input type="text" id="editAlbum" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">YouTube URL or Video ID *</label>
+                    <input type="text" id="editLink" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleSaveEditSong()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-semibold">Save Changes</button>
+                <button onclick="closeEditSongModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Artist Image Modal -->
+    <div id="artistImageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeArtistImageModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-image text-indigo-400 mr-2"></i>Change Artist Photo</h3>
+            <p id="artistImageTarget" class="text-xs text-indigo-300 font-semibold mb-4"></p>
+            <input type="hidden" id="targetArtistName">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Select New Image</label>
+                    <input type="file" id="artistImageFile" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleSaveArtistImage()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-semibold">Upload & Sync</button>
+                <button onclick="closeArtistImageModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Random Modal -->
     <div id="randomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
         <div class="glass max-w-md w-full rounded-2xl p-6 flex flex-col items-center text-center shadow-2xl relative border border-slate-700">
             <button onclick="closeRandomModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-amber-500 font-bold text-xs uppercase tracking-wider mb-3"><i class="fa-solid fa-dice mr-1"></i> Random Pick</div>
+            <div id="randomTypeTag" class="text-amber-500 font-bold text-xs uppercase tracking-wider mb-3"><i class="fa-solid fa-dice mr-1"></i> Random Pick</div>
             <div id="randomImageContainer" class="w-32 h-32 rounded-xl overflow-hidden mb-4 bg-slate-800 flex items-center justify-center border border-slate-700"></div>
             <h3 id="randomSongTitle" class="text-lg font-bold text-white mb-1"></h3>
             <p id="randomSongArtist" class="text-sm text-indigo-400 font-semibold mb-1"></p>
             <p id="randomSongAlbum" class="text-xs text-slate-400 font-medium mb-6 flex items-center gap-1"><i class="fa-solid fa-compact-disc"></i> <span></span></p>
             <div class="flex items-center gap-3 w-full">
-                <button onclick="pickRandomSong()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold text-xs border border-slate-700">Pick Another</button>
-                <button id="randomPlayBtn" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-xs">Play Karaoke</button>
+                <button id="randomPickAnotherBtn" onclick="pickRandomSong()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold text-xs border border-slate-700">Pick Another</button>
+                <button id="randomActionBtn" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-xs">Play Karaoke</button>
             </div>
         </div>
     </div>
@@ -224,7 +286,6 @@
             showArtistsView();
         }
 
-        // Fetch Remote Favorites directly from GitHub with cache-busting & exact overwrite
         async function fetchAdminFavorites() {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
@@ -251,7 +312,6 @@
             }
         }
 
-        // Sync Favorites to favorites.json on GitHub
         async function saveFavsToGitHub() {
             const owner = localStorage.getItem('gh_owner');
             const repo = localStorage.getItem('gh_repo');
@@ -285,7 +345,9 @@
             toastText.innerText = "Syncing with GitHub...";
 
             try {
-                await updateGitHubFile(owner, repo, token, 'songs.json', JSON.stringify(newSongsList, null, 2));
+                if (newSongsList) {
+                    await updateGitHubFile(owner, repo, token, 'songs.json', JSON.stringify(newSongsList, null, 2));
+                }
 
                 if (newImageData) {
                     const jsContent = `window.ARTIST_IMAGES = ${JSON.stringify(window.ARTIST_IMAGES, null, 2)};`;
@@ -296,7 +358,7 @@
                 setTimeout(() => toast.classList.add('hidden'), 2500);
             } catch (err) {
                 console.error("GitHub Sync Failed:", err);
-                toastText.innerText = "Sync failed. Check Token settings.";
+                toastText.innerText = "Sync failed. Check Login Token.";
                 setTimeout(() => toast.classList.add('hidden'), 4000);
             }
         }
@@ -320,7 +382,7 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    message: `Update ${filePath} via Karaoke Hub`,
+                    message: `Update ${filePath} via KaraOK`,
                     content: content,
                     sha: sha !== "" ? sha : undefined
                 })
@@ -355,6 +417,90 @@
         }
 
         function closeAddSongModal() { document.getElementById('addSongModal').classList.add('hidden'); }
+
+        // Edit Song Functions
+        function openEditSongModal(event, id) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            document.getElementById('editSongId').value = song.id;
+            document.getElementById('editArtist').value = song.artist || '';
+            document.getElementById('editTitle').value = song.title || '';
+            document.getElementById('editAlbum').value = song.album || '';
+            document.getElementById('editLink').value = song.link || (song.ytId ? `https://www.youtube.com/watch?v=${song.ytId}` : '');
+            
+            document.getElementById('editSongModal').classList.remove('hidden');
+        }
+
+        function closeEditSongModal() { document.getElementById('editSongModal').classList.add('hidden'); }
+
+        async function handleSaveEditSong() {
+            if (!hasAdminAccess()) return;
+            const id = Number(document.getElementById('editSongId').value);
+            const artist = document.getElementById('editArtist').value.trim();
+            const title = document.getElementById('editTitle').value.trim();
+            const album = document.getElementById('editAlbum').value.trim() || 'Single';
+            const link = document.getElementById('editLink').value.trim();
+
+            if (!artist || !title || !link) {
+                alert("Please fill in Artist, Title, and YouTube Link.");
+                return;
+            }
+
+            const ytId = getYTId(link);
+            if (!ytId) {
+                alert("Invalid YouTube link.");
+                return;
+            }
+
+            const songIndex = songs.findIndex(s => s.id === id);
+            if (songIndex !== -1) {
+                songs[songIndex] = { ...songs[songIndex], artist, title, album, link, ytId };
+                saveState();
+                saveToGitHub(songs);
+                closeEditSongModal();
+                render();
+            }
+        }
+
+        // Change Artist Photo Functions
+        function openArtistImageModal(event, artistName) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+
+            document.getElementById('targetArtistName').value = artistName;
+            document.getElementById('artistImageTarget').innerText = `Artist: ${artistName}`;
+            document.getElementById('artistImageFile').value = '';
+            document.getElementById('artistImageModal').classList.remove('hidden');
+        }
+
+        function closeArtistImageModal() { document.getElementById('artistImageModal').classList.add('hidden'); }
+
+        async function handleSaveArtistImage() {
+            if (!hasAdminAccess()) return;
+            const artistName = document.getElementById('targetArtistName').value;
+            const imageInput = document.getElementById('artistImageFile');
+
+            if (!imageInput.files || !imageInput.files[0]) {
+                alert("Please select an image file.");
+                return;
+            }
+
+            try {
+                const base64Data = await fileToBase64(imageInput.files[0]);
+                const cleanKey = cleanArtistName(artistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+                window.ARTIST_IMAGES[cleanKey] = base64Data;
+                
+                saveToGitHub(songs, true);
+                closeArtistImageModal();
+                render();
+            } catch (e) {
+                console.error("Image upload failed:", e);
+                alert("Failed to process image.");
+            }
+        }
 
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -530,8 +676,10 @@
             if (available.length === 0) return alert("Playlist empty!");
             const currentRandomSong = available[Math.floor(Math.random() * available.length)];
 
+            document.getElementById('randomTypeTag').innerHTML = `<i class="fa-solid fa-dice mr-1"></i> Random Song`;
             document.getElementById('randomSongTitle').innerText = currentRandomSong.title;
             document.getElementById('randomSongArtist').innerText = currentRandomSong.artist;
+            document.getElementById('randomSongAlbum').style.display = 'flex';
             document.getElementById('randomSongAlbum').querySelector('span').innerText = currentRandomSong.album;
 
             const base64Img = getArtistBase64Image(currentRandomSong.artist);
@@ -540,7 +688,33 @@
                 ? `<img src="${base64Img}" class="w-full h-full object-cover">` 
                 : `<i class="fa-solid fa-music text-4xl text-slate-500"></i>`;
 
-            document.getElementById('randomPlayBtn').onclick = function() { playSong(currentRandomSong); closeRandomModal(); };
+            document.getElementById('randomPickAnotherBtn').onclick = function() { pickRandomSong(); };
+            document.getElementById('randomActionBtn').innerText = "Play Karaoke";
+            document.getElementById('randomActionBtn').onclick = function() { playSong(currentRandomSong); closeRandomModal(); };
+            document.getElementById('randomModal').classList.remove('hidden');
+        }
+
+        function pickRandomArtist() {
+            const availableArtists = [...new Set(songs.map(s => s.artist))].filter(Boolean);
+            if (availableArtists.length === 0) return alert("No artists found!");
+            
+            const randomArtist = availableArtists[Math.floor(Math.random() * availableArtists.length)];
+            const artistSongCount = songs.filter(s => s.artist === randomArtist).length;
+
+            document.getElementById('randomTypeTag').innerHTML = `<i class="fa-solid fa-user-astronaut mr-1"></i> Random Artist`;
+            document.getElementById('randomSongTitle').innerText = randomArtist;
+            document.getElementById('randomSongArtist').innerText = `${artistSongCount} ${artistSongCount === 1 ? 'song' : 'songs'} available`;
+            document.getElementById('randomSongAlbum').style.display = 'none';
+
+            const base64Img = getArtistBase64Image(randomArtist);
+            const imgContainer = document.getElementById('randomImageContainer');
+            imgContainer.innerHTML = base64Img 
+                ? `<img src="${base64Img}" class="w-full h-full object-cover">` 
+                : `<i class="fa-solid fa-user text-4xl text-slate-500"></i>`;
+
+            document.getElementById('randomPickAnotherBtn').onclick = function() { pickRandomArtist(); };
+            document.getElementById('randomActionBtn').innerText = "View Artist";
+            document.getElementById('randomActionBtn').onclick = function() { selectArtist(randomArtist); closeRandomModal(); };
             document.getElementById('randomModal').classList.remove('hidden');
         }
 
@@ -591,6 +765,11 @@
                                 ${imageHtml}
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
                                 <div class="absolute top-2 right-2 bg-indigo-600/90 text-xs font-bold px-2 py-0.5 rounded-full text-white">${count} ${count === 1 ? 'song' : 'songs'}</div>
+                                ${isAdmin ? `
+                                    <button onclick="openArtistImageModal(event, '${escapedName}')" class="absolute top-2 left-2 p-1.5 rounded-lg bg-slate-950/70 text-slate-300 hover:text-indigo-400 z-10 transition">
+                                        <i class="fa-solid fa-camera text-xs"></i>
+                                    </button>
+                                ` : ''}
                             </div>
                             <div class="p-3 flex items-center justify-between">
                                 <h3 class="font-bold text-sm text-slate-100 group-hover:text-indigo-400 truncate">${name}</h3>
@@ -620,7 +799,10 @@
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-pink-400"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
-                            ${isAdmin ? `<button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
+                            ${isAdmin ? `
+                                <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            ` : ''}
                         </div>
                     </div>`).join('');
 
@@ -649,7 +831,10 @@
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
                             <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
                                 <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-pink-500"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
-                                ${isAdmin ? `<button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
+                                ${isAdmin ? `
+                                    <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                    <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                ` : ''}
                             </div>
                         </div>
                         <div class="p-3 flex flex-col justify-between flex-1">
