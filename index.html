@@ -13,6 +13,8 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .draggable-item { cursor: grab; }
+        .draggable-item.dragging { opacity: 0.4; border-style: dashed; border-color: #f59e0b; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" onload="initApp()">
@@ -242,6 +244,7 @@
         let todoList = JSON.parse(localStorage.getItem('karaoke_todo') || '[]');
         let currentMode = 'artists'; 
         let selectedArtist = null;
+        let draggedTodoId = null;
 
         function hasAdminAccess() {
             const token = localStorage.getItem('gh_token');
@@ -468,7 +471,6 @@
 
         function closeAddSongModal() { document.getElementById('addSongModal').classList.add('hidden'); }
 
-        // Edit Song Functions
         function openEditSongModal(event, id) {
             event.stopPropagation();
             if (!hasAdminAccess()) return;
@@ -515,7 +517,6 @@
             }
         }
 
-        // Change Artist Photo Functions
         function openArtistImageModal(event, artistName) {
             event.stopPropagation();
             if (!hasAdminAccess()) return;
@@ -646,6 +647,40 @@
                     const remaining = songs.filter(s => s.artist === selectedArtist);
                     if (remaining.length === 0) { showArtistsView(); return; }
                 }
+                render();
+            }
+        }
+
+        // Drag & Drop To-Do Handlers
+        function handleDragStart(e, id) {
+            draggedTodoId = id;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            draggedTodoId = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e, targetId) {
+            e.preventDefault();
+            if (!draggedTodoId || draggedTodoId === targetId) return;
+
+            const fromIndex = todoList.findIndex(t => t.id === draggedTodoId);
+            const toIndex = todoList.findIndex(t => t.id === targetId);
+
+            if (fromIndex !== -1 && toIndex !== -1) {
+                const [movedItem] = todoList.splice(fromIndex, 1);
+                todoList.splice(toIndex, 0, movedItem);
+
+                saveState();
+                saveTodoToGitHub();
                 render();
             }
         }
@@ -851,8 +886,14 @@
                 }
 
                 const todoListHtml = filteredTodo.map(item => `
-                    <div class="glass rounded-xl p-3.5 px-4 flex items-center justify-between border ${item.done ? 'border-slate-800 bg-slate-900/40 opacity-60' : 'border-slate-700'} transition">
+                    <div draggable="true" 
+                         ondragstart="handleDragStart(event, ${item.id})" 
+                         ondragend="handleDragEnd(event)" 
+                         ondragover="handleDragOver(event)" 
+                         ondrop="handleDrop(event, ${item.id})"
+                         class="draggable-item glass rounded-xl p-3.5 px-4 flex items-center justify-between border ${item.done ? 'border-slate-800 bg-slate-900/40 opacity-60' : 'border-slate-700'} transition select-none">
                         <div class="flex items-center gap-3.5 min-w-0 pr-4">
+                            <i class="fa-solid fa-grip-vertical text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing text-sm"></i>
                             <button onclick="toggleTodoDone(${item.id})" class="text-lg ${item.done ? 'text-emerald-500' : 'text-slate-500 hover:text-slate-300'} transition">
                                 <i class="fa-${item.done ? 'solid fa-circle-check' : 'regular fa-circle'}"></i>
                             </button>
