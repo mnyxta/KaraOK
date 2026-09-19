@@ -9352,14 +9352,6 @@
     "ytId": "RlngN3tXpLU"
   },
   {
-    "id": 2363,
-    "artist": "Jana Kirschner",
-    "title": "Na čiernom koni",
-    "album": "Single",
-    "link": "https://www.youtube.com/watch?v=uZQsHIHFYcg",
-    "ytId": "uZQsHIHFYcg"
-  },
-  {
     "id": 2364,
     "artist": "Jana Kirschner",
     "title": "Ty a ja",
@@ -9390,5 +9382,13 @@
     "album": "Single",
     "link": "https://youtu.be/Uy3XQgfbZUs",
     "ytId": "Uy3XQgfbZUs"
+  },
+  {
+    "id": 2368,
+    "artist": "Midi lidi",
+    "title": "Žižla",
+    "album": "Single",
+    "link": "https://youtu.be/ws4mxq-pG9o",
+    "ytId": "ws4mxq-pG9o"
   }
 ]
