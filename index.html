@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-6">
+    <main id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 md:p-6">
         <div id="mainContainer"></div>
         <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-slate-500">
             <i class="fa-solid fa-compact-disc text-5xl mb-3 animate-spin"></i>
@@ -1012,6 +1012,12 @@
         }
 
         function selectArtist(artistName) {
+            // Uložíme pozíciu skrolovania pre hlavný <main> kontajner pred prechodom
+            const mainContainer = document.getElementById('mainScrollContainer');
+            if (mainContainer) {
+                sessionStorage.setItem('artistsScrollPosition', mainContainer.scrollTop.toString());
+            }
+
             currentMode = 'artist_songs'; selectedArtist = artistName;
             document.getElementById('searchInput').value = '';
             document.getElementById('artistBreadcrumb').classList.remove('hidden');
@@ -1267,6 +1273,16 @@
                 }).join('');
 
                 container.innerHTML = gridHtml ? `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${gridHtml}</div>` : '<p class="text-center text-slate-500 py-10 text-sm">No artists found for selected category.</p>';
+
+                // Obnovenie skrolovania po vykreslení zoznamu
+                setTimeout(() => {
+                    const savedPosition = sessionStorage.getItem('artistsScrollPosition');
+                    const mainContainer = document.getElementById('mainScrollContainer');
+                    if (savedPosition && mainContainer) {
+                        mainContainer.scrollTop = parseInt(savedPosition, 10);
+                    }
+                }, 0);
+
                 return;
             }
 
@@ -1297,6 +1313,11 @@
                     </div>`).join('');
 
                 container.innerHTML = `<div class="max-w-4xl mx-auto flex flex-col gap-2">${listHtml}</div>`;
+
+                // Pri náhľade detailu umelca odskrolujeme hlavný kontajner na vrch
+                const mainContainer = document.getElementById('mainScrollContainer');
+                if (mainContainer) mainContainer.scrollTop = 0;
+
                 return;
             }
 
