@@ -40,32 +40,27 @@
                 </svg>
             </button>
             
-            <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            <div class="flex items-center gap-2">
                 <!-- Import Button -->
-                <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2 shrink-0">
+                <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-file-import"></i> <span>Import Playlist</span>
                     <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
 
                 <!-- Add Song Button -->
-                <button id="addSongBtn" onclick="openAddSongModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2 shrink-0">
+                <button id="addSongBtn" onclick="openAddSongModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Add Song
                 </button>
 
-                <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow shrink-0">
+                <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-shuffle"></i> Random Song
                 </button>
 
-                <!-- NEW: Filtered Random Button -->
-                <button onclick="openFilteredRandomModal()" class="bg-amber-700 hover:bg-amber-600 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow shrink-0">
-                    <i class="fa-solid fa-filter-circle-dollar"></i> Filtered Random
-                </button>
-
-                <button onclick="pickRandomArtist()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow shrink-0">
+                <button onclick="pickRandomArtist()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-user-astronaut"></i> Random Artist
                 </button>
 
-                <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shrink-0">
+                <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-right-to-bracket"></i> Login
                 </button>
             </div>
@@ -165,18 +160,1242 @@
         </div>
     </div>
 
-    <!-- NEW: Filtered Random Modal -->
-    <div id="filteredRandomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-        <div class="glass max-w-sm w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
-            <button onclick="closeFilteredRandomModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-filter-circle-dollar text-amber-500 mr-2"></i>Favorites Random Filter</h3>
-            <p class="text-xs text-slate-400 mb-4">Pick a random favorite song within a specified rating score range.</p>
+    <!-- Add Song Modal -->
+    <div id="addSongModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeAddSongModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-music text-indigo-400 mr-2"></i>Add New Song</h3>
+            <p class="text-xs text-slate-400 mb-4">Manually add a track to your library and upload an artist cover image.</p>
             
-            <div class="space-y-3 text-xs mb-6">
+            <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-300 mb-1 font-semibold">Minimum Rating (1-10)</label>
-                    <select id="filterMinRating" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-semibold">
-                        <option value="1">1 pt</option>
-                        <option value="2">2 pts</option>
-                        <option value="3">3 pts</option>
-                        <option value="4
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Name *</label>
+                    <input type="text" id="newArtist" placeholder="e.g. Queen" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Song Title *</label>
+                    <input type="text" id="newTitle" placeholder="e.g. Bohemian Rhapsody" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Album Name</label>
+                    <input type="text" id="newAlbum" placeholder="e.g. A Night at the Opera" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">YouTube URL or Video ID *</label>
+                    <input type="text" id="newLink" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Image (Optional)</label>
+                    <input type="file" id="newImageFile" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleAddSong()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-xl text-xs font-semibold">Add & Sync</button>
+                <button onclick="closeAddSongModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Song Modal -->
+    <div id="editSongModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeEditSongModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-pen-to-square text-indigo-400 mr-2"></i>Edit Song</h3>
+            <p class="text-xs text-slate-400 mb-4">Modify track metadata and sync to your library.</p>
+            <input type="hidden" id="editSongId">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Artist Name *</label>
+                    <input type="text" id="editArtist" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Song Title *</label>
+                    <input type="text" id="editTitle" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Album Name</label>
+                    <input type="text" id="editAlbum" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">YouTube URL or Video ID *</label>
+                    <input type="text" id="editLink" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleSaveEditSong()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-semibold">Save Changes</button>
+                <button onclick="closeEditSongModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Artist Image Modal -->
+    <div id="artistImageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-slate-700">
+            <button onclick="closeArtistImageModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-image text-indigo-400 mr-2"></i>Change Artist Photo</h3>
+            <p id="artistImageTarget" class="text-xs text-indigo-300 font-semibold mb-4"></p>
+            <input type="hidden" id="targetArtistName">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1 font-semibold">Select New Image</label>
+                    <input type="file" id="artistImageFile" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="handleSaveArtistImage()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-semibold">Upload & Sync</button>
+                <button onclick="closeArtistImageModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Random Modal -->
+    <div id="randomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass max-w-md w-full rounded-2xl p-6 flex flex-col items-center text-center shadow-2xl relative border border-slate-700">
+            <button onclick="closeRandomModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white p-2 text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <div id="randomTypeTag" class="text-amber-500 font-bold text-xs uppercase tracking-wider mb-3"><i class="fa-solid fa-dice mr-1"></i> Random Pick</div>
+            <div id="randomImageContainer" class="w-32 h-32 rounded-xl overflow-hidden mb-4 bg-slate-800 flex items-center justify-center border border-slate-700"></div>
+            <h3 id="randomSongTitle" class="text-lg font-bold text-white mb-1"></h3>
+            <p id="randomSongArtist" class="text-sm text-indigo-400 font-semibold mb-1"></p>
+            <p id="randomSongAlbum" class="text-xs text-slate-400 font-medium mb-6 flex items-center gap-1"><i class="fa-solid fa-compact-disc"></i> <span></span></p>
+            <div class="flex items-center gap-3 w-full">
+                <button id="randomPickAnotherBtn" onclick="pickRandomSong()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold text-xs border border-slate-700">Pick Another</button>
+                <button id="randomActionBtn" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-xs">Play Karaoke</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.ARTIST_IMAGES = window.ARTIST_IMAGES || {};
+
+        let songs = [];
+        let favorites = new Set(JSON.parse(localStorage.getItem('karaoke_favs') || '[]'));
+        let ratings = JSON.parse(localStorage.getItem('karaoke_ratings') || '{}'); // { songId: rating 1-10 }
+        let recents = JSON.parse(localStorage.getItem('karaoke_recents') || '[]');
+        let todoList = JSON.parse(localStorage.getItem('karaoke_todo') || '[]');
+        let artistCategories = JSON.parse(localStorage.getItem('karaoke_artist_categories') || '{}');
+        
+        let currentMode = 'artists'; 
+        let selectedArtist = null;
+        let draggedTodoId = null;
+        let categoryFilter = 'all'; // 'all' | 'mainstream' | 'alternative'
+
+        // Sorting preferences
+        let artistSortMode = 'count'; // 'count' | 'name'
+        let allSongsSortMode = 'artist'; // 'artist' | 'title'
+        let favsSortMode = 'rating_desc'; // 'rating_desc' | 'rating_asc' | 'title' | 'artist'
+
+        function hasAdminAccess() {
+            const token = localStorage.getItem('gh_token');
+            return !!(token && token.trim().length > 0);
+        }
+
+        function updateAdminUI() {
+            const importBtn = document.getElementById('importBtn');
+            const addSongBtn = document.getElementById('addSongBtn');
+            const tabTodo = document.getElementById('tab-todo');
+            const isAdmin = hasAdminAccess();
+
+            if (isAdmin) {
+                importBtn.classList.remove('hidden'); importBtn.classList.add('flex');
+                addSongBtn.classList.remove('hidden'); addSongBtn.classList.add('flex');
+                tabTodo.classList.remove('hidden'); tabTodo.classList.add('flex');
+            } else {
+                importBtn.classList.add('hidden'); importBtn.classList.remove('flex');
+                addSongBtn.classList.add('hidden'); addSongBtn.classList.remove('flex');
+                tabTodo.classList.add('hidden'); tabTodo.classList.remove('flex');
+            }
+        }
+
+        function updateSortDropdown() {
+            const select = document.getElementById('sortSelect');
+            const container = document.getElementById('sortControls');
+
+            if (currentMode === 'artists') {
+                container.classList.remove('hidden');
+                select.innerHTML = `
+                    <option value="count" ${artistSortMode === 'count' ? 'selected' : ''}>Sort: Song Count</option>
+                    <option value="name" ${artistSortMode === 'name' ? 'selected' : ''}>Sort: Artist A-Z</option>
+                `;
+            } else if (currentMode === 'all_songs') {
+                container.classList.remove('hidden');
+                select.innerHTML = `
+                    <option value="artist" ${allSongsSortMode === 'artist' ? 'selected' : ''}>Sort: Artist A-Z</option>
+                    <option value="title" ${allSongsSortMode === 'title' ? 'selected' : ''}>Sort: Title A-Z</option>
+                `;
+            } else if (currentMode === 'favs') {
+                container.classList.remove('hidden');
+                select.innerHTML = `
+                    <option value="rating_desc" ${favsSortMode === 'rating_desc' ? 'selected' : ''}>Sort: Highest Rated (10→1)</option>
+                    <option value="rating_asc" ${favsSortMode === 'rating_asc' ? 'selected' : ''}>Sort: Lowest Rated (1→10)</option>
+                    <option value="artist" ${favsSortMode === 'artist' ? 'selected' : ''}>Sort: Artist A-Z</option>
+                    <option value="title" ${favsSortMode === 'title' ? 'selected' : ''}>Sort: Title A-Z</option>
+                `;
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function handleSortChange(val) {
+            if (currentMode === 'artists') artistSortMode = val;
+            else if (currentMode === 'all_songs') allSongsSortMode = val;
+            else if (currentMode === 'favs') favsSortMode = val;
+            render();
+        }
+
+        function setCategoryFilter(cat) {
+            categoryFilter = cat;
+            ['all', 'mainstream', 'alternative'].forEach(c => {
+                const btn = document.getElementById(`catFilter-${c}`);
+                if (c === cat) {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            render();
+        }
+
+        function getArtistCategory(artistName) {
+            if (!artistName) return 'alternative';
+            const cleanKey = cleanArtistName(artistName).toLowerCase();
+            return artistCategories[cleanKey] || 'alternative';
+        }
+
+        function toggleArtistCategory(event, artistName) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+
+            const cleanKey = cleanArtistName(artistName).toLowerCase();
+            const currentCat = getArtistCategory(artistName);
+            const newCat = currentCat === 'mainstream' ? 'alternative' : 'mainstream';
+
+            artistCategories[cleanKey] = newCat;
+            saveState();
+            saveCategoriesToGitHub();
+            render();
+        }
+
+        function setSongRating(event, songId, rating) {
+            event.stopPropagation();
+            if (rating <= 0 || rating > 10) delete ratings[songId];
+            else ratings[songId] = rating;
+
+            // Automatically add to favorites if rated
+            if (rating > 0 && !favorites.has(songId)) {
+                favorites.add(songId);
+            }
+
+            saveState();
+            if (hasAdminAccess()) {
+                saveRatingsToGitHub();
+                saveFavsToGitHub();
+            }
+            render();
+        }
+
+        async function initApp() {
+            document.getElementById('ghOwner').value = localStorage.getItem('gh_owner') || '';
+            document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+            document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
+
+            updateAdminUI();
+
+            if (hasAdminAccess()) {
+                await fetchAdminFavorites();
+                await fetchAdminRatings();
+                await fetchAdminTodo();
+                await fetchAdminCategories();
+            }
+
+            try {
+                const response = await fetch('songs.json?cache_bust=' + Date.now());
+                if (response.ok) {
+                    songs = await response.json();
+                    showArtistsView();
+                    return;
+                }
+            } catch (e) {
+                console.warn("Could not fetch songs.json, checking cached memory.", e);
+            }
+
+            const cached = localStorage.getItem('karaoke_cached_songs');
+            if (cached) {
+                try { songs = JSON.parse(cached); } catch(e) { songs = []; }
+            }
+            showArtistsView();
+        }
+
+        async function fetchAdminFavorites() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/favorites.json?cache_bust=` + Date.now(), {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const remoteFavs = JSON.parse(contentStr);
+                    if (Array.isArray(remoteFavs)) {
+                        favorites = new Set(remoteFavs);
+                        saveState();
+                        render();
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch remote favorites.", e);
+            }
+        }
+
+        async function fetchAdminRatings() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/ratings.json?cache_bust=` + Date.now(), {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const remoteRatings = JSON.parse(contentStr);
+                    if (typeof remoteRatings === 'object') {
+                        ratings = remoteRatings;
+                        saveState();
+                        render();
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch remote ratings.", e);
+            }
+        }
+
+        async function fetchAdminTodo() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/todo.json?cache_bust=` + Date.now(), {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const remoteTodo = JSON.parse(contentStr);
+                    if (Array.isArray(remoteTodo)) {
+                        todoList = remoteTodo;
+                        saveState();
+                        render();
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch remote todo list.", e);
+            }
+        }
+
+        async function fetchAdminCategories() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/categories.json?cache_bust=` + Date.now(), {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const remoteCats = JSON.parse(contentStr);
+                    if (typeof remoteCats === 'object') {
+                        artistCategories = remoteCats;
+                        saveState();
+                        render();
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch remote categories.", e);
+            }
+        }
+
+        async function saveFavsToGitHub() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                const favArray = Array.from(favorites);
+                await updateGitHubFile(owner, repo, token, 'favorites.json', JSON.stringify(favArray, null, 2));
+            } catch (err) {
+                console.error("Failed to sync favorites to GitHub:", err);
+            }
+        }
+
+        async function saveRatingsToGitHub() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                await updateGitHubFile(owner, repo, token, 'ratings.json', JSON.stringify(ratings, null, 2));
+            } catch (err) {
+                console.error("Failed to sync ratings to GitHub:", err);
+            }
+        }
+
+        async function saveTodoToGitHub() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                await updateGitHubFile(owner, repo, token, 'todo.json', JSON.stringify(todoList, null, 2));
+            } catch (err) {
+                console.error("Failed to sync todo list to GitHub:", err);
+            }
+        }
+
+        async function saveCategoriesToGitHub() {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            if (!owner || !repo || !token) return;
+
+            try {
+                await updateGitHubFile(owner, repo, token, 'categories.json', JSON.stringify(artistCategories, null, 2));
+            } catch (err) {
+                console.error("Failed to sync categories to GitHub:", err);
+            }
+        }
+
+        async function saveToGitHub(newSongsList, newImageData = null) {
+            const owner = localStorage.getItem('gh_owner');
+            const repo = localStorage.getItem('gh_repo');
+            const token = localStorage.getItem('gh_token');
+
+            localStorage.setItem('karaoke_cached_songs', JSON.stringify(newSongsList));
+
+            if (!owner || !repo || !token) {
+                console.warn("GitHub credentials missing. Saved locally in current browser.");
+                return;
+            }
+
+            const toast = document.getElementById('syncToast');
+            const toastText = document.getElementById('syncToastText');
+            toast.classList.remove('hidden'); toast.classList.add('flex');
+            toastText.innerText = "Syncing with GitHub...";
+
+            try {
+                if (newSongsList) {
+                    await updateGitHubFile(owner, repo, token, 'songs.json', JSON.stringify(newSongsList, null, 2));
+                }
+
+                if (newImageData) {
+                    const jsContent = `window.ARTIST_IMAGES = ${JSON.stringify(window.ARTIST_IMAGES, null, 2)};`;
+                    await updateGitHubFile(owner, repo, token, 'images_data.js', jsContent);
+                }
+
+                toastText.innerText = "Synced to GitHub!";
+                setTimeout(() => toast.classList.add('hidden'), 2500);
+            } catch (err) {
+                console.error("GitHub Sync Failed:", err);
+                toastText.innerText = "Sync failed. Check Login Token.";
+                setTimeout(() => toast.classList.add('hidden'), 4000);
+            }
+        }
+
+        async function updateGitHubFile(owner, repo, token, filePath, stringContent) {
+            const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+
+            let sha = "";
+            if (getFile.ok) {
+                const data = await getFile.json();
+                sha = data.sha;
+            }
+
+            const content = btoa(unescape(encodeURIComponent(stringContent)));
+            const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Update ${filePath} via KaraOK`,
+                    content: content,
+                    sha: sha !== "" ? sha : undefined
+                })
+            });
+
+            if (!putResponse.ok) throw new Error(`API returned status ${putResponse.status}`);
+        }
+
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        async function saveSettings() {
+            localStorage.setItem('gh_owner', document.getElementById('ghOwner').value.trim());
+            localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+            localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
+            
+            updateAdminUI(); 
+            if (hasAdminAccess()) {
+                await fetchAdminFavorites();
+                await fetchAdminRatings();
+                await fetchAdminTodo();
+                await fetchAdminCategories();
+            }
+            closeSettingsModal(); 
+            render();
+        }
+
+        function openAddSongModal(presetArtist = '', presetTitle = '') {
+            document.getElementById('newArtist').value = presetArtist;
+            document.getElementById('newTitle').value = presetTitle;
+            document.getElementById('newAlbum').value = '';
+            document.getElementById('newLink').value = '';
+            document.getElementById('newImageFile').value = '';
+            document.getElementById('addSongModal').classList.remove('hidden');
+        }
+
+        function closeAddSongModal() { document.getElementById('addSongModal').classList.add('hidden'); }
+
+        function openEditSongModal(event, id) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            document.getElementById('editSongId').value = song.id;
+            document.getElementById('editArtist').value = song.artist || '';
+            document.getElementById('editTitle').value = song.title || '';
+            document.getElementById('editAlbum').value = song.album || '';
+            document.getElementById('editLink').value = song.link || (song.ytId ? `https://www.youtube.com/watch?v=${song.ytId}` : '');
+            
+            document.getElementById('editSongModal').classList.remove('hidden');
+        }
+
+        function closeEditSongModal() { document.getElementById('editSongModal').classList.add('hidden'); }
+
+        async function handleSaveEditSong() {
+            if (!hasAdminAccess()) return;
+            const id = Number(document.getElementById('editSongId').value);
+            const artist = document.getElementById('editArtist').value.trim();
+            const title = document.getElementById('editTitle').value.trim();
+            const album = document.getElementById('editAlbum').value.trim() || 'Single';
+            const link = document.getElementById('editLink').value.trim();
+
+            if (!artist || !title || !link) {
+                alert("Please fill in Artist, Title, and YouTube Link.");
+                return;
+            }
+
+            const ytId = getYTId(link);
+            if (!ytId) {
+                alert("Invalid YouTube link.");
+                return;
+            }
+
+            const songIndex = songs.findIndex(s => s.id === id);
+            if (songIndex !== -1) {
+                songs[songIndex] = { ...songs[songIndex], artist, title, album, link, ytId };
+                saveState();
+                saveToGitHub(songs);
+                closeEditSongModal();
+                render();
+            }
+        }
+
+        function openArtistImageModal(event, artistName) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+
+            document.getElementById('targetArtistName').value = artistName;
+            document.getElementById('artistImageTarget').innerText = `Artist: ${artistName}`;
+            document.getElementById('artistImageFile').value = '';
+            document.getElementById('artistImageModal').classList.remove('hidden');
+        }
+
+        function closeArtistImageModal() { document.getElementById('artistImageModal').classList.add('hidden'); }
+
+        async function handleSaveArtistImage() {
+            if (!hasAdminAccess()) return;
+            const artistName = document.getElementById('targetArtistName').value;
+            const imageInput = document.getElementById('artistImageFile');
+
+            if (!imageInput.files || !imageInput.files[0]) {
+                alert("Please select an image file.");
+                return;
+            }
+
+            try {
+                const base64Data = await fileToBase64(imageInput.files[0]);
+                const cleanKey = cleanArtistName(artistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+                window.ARTIST_IMAGES[cleanKey] = base64Data;
+                
+                saveToGitHub(songs, true);
+                closeArtistImageModal();
+                render();
+            } catch (e) {
+                console.error("Image upload failed:", e);
+                alert("Failed to process image.");
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleAddSong() {
+            if (!hasAdminAccess()) return;
+
+            const artist = document.getElementById('newArtist').value.trim();
+            const title = document.getElementById('newTitle').value.trim();
+            const album = document.getElementById('newAlbum').value.trim() || 'Single';
+            const link = document.getElementById('newLink').value.trim();
+            const imageInput = document.getElementById('newImageFile');
+
+            if (!artist || !title || !link) {
+                alert("Please fill in Artist, Title, and YouTube Link.");
+                return;
+            }
+
+            const ytId = getYTId(link);
+            if (!ytId) {
+                alert("Invalid YouTube link. Please provide a valid link or 11-character video ID.");
+                return;
+            }
+
+            let hasNewImage = false;
+            if (imageInput.files && imageInput.files[0]) {
+                try {
+                    const base64Data = await fileToBase64(imageInput.files[0]);
+                    const cleanKey = cleanArtistName(artist).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+                    window.ARTIST_IMAGES[cleanKey] = base64Data;
+                    hasNewImage = true;
+                } catch (e) {
+                    console.error("Image read failed:", e);
+                }
+            }
+
+            const newId = songs.length > 0 ? Math.max(...songs.map(s => Number(s.id) || 0)) + 1 : 1;
+            const newSong = { id: newId, artist, title, album, link, ytId };
+            songs.push(newSong);
+
+            saveState();
+            saveToGitHub(songs, hasNewImage);
+            closeAddSongModal();
+            render();
+        }
+
+        function cleanArtistName(rawName) { 
+            return (rawName || '').split(/ feat\.?| ft\.?| & |,|\/| starring/i)[0].trim(); 
+        }
+
+        function getArtistBase64Image(rawArtistName) {
+            if (!rawArtistName) return null;
+            const cleanKey = cleanArtistName(rawArtistName).replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
+            return (window.ARTIST_IMAGES && window.ARTIST_IMAGES[cleanKey]) ? window.ARTIST_IMAGES[cleanKey] : null;
+        }
+
+        function getYTId(url) {
+            if (!url || typeof url !== 'string') return null;
+            const match = url.match(/(?:v=|\/|embed\/|shorts\/)([\w-]{11})/);
+            return match ? match[1] : (url.length === 11 ? url : null);
+        }
+
+        function saveState() {
+            localStorage.setItem('karaoke_favs', JSON.stringify([...favorites]));
+            localStorage.setItem('karaoke_ratings', JSON.stringify(ratings));
+            localStorage.setItem('karaoke_recents', JSON.stringify(recents));
+            localStorage.setItem('karaoke_todo', JSON.stringify(todoList));
+            localStorage.setItem('karaoke_artist_categories', JSON.stringify(artistCategories));
+            
+            document.getElementById('favCount').innerText = favorites.size;
+            document.getElementById('todoCount').innerText = todoList.filter(t => !t.done).length;
+        }
+
+        function deleteSong(event, id) {
+            event.stopPropagation();
+            if (!hasAdminAccess()) return;
+
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            if (confirm(`Remove "${song.title}" by ${song.artist}?`)) {
+                songs = songs.filter(s => s.id !== id);
+                favorites.delete(id);
+                delete ratings[id];
+                recents = recents.filter(s => s.id !== id);
+                saveState();
+                saveToGitHub(songs);
+                if (hasAdminAccess()) {
+                    saveFavsToGitHub();
+                    saveRatingsToGitHub();
+                }
+
+                if (currentMode === 'artist_songs') {
+                    const remaining = songs.filter(s => s.artist === selectedArtist);
+                    if (remaining.length === 0) { showArtistsView(); return; }
+                }
+                render();
+            }
+        }
+
+        // Drag & Drop To-Do Handlers
+        function handleDragStart(e, id) {
+            draggedTodoId = id;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            draggedTodoId = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e, targetId) {
+            e.preventDefault();
+            if (!draggedTodoId || draggedTodoId === targetId) return;
+
+            const fromIndex = todoList.findIndex(t => t.id === draggedTodoId);
+            const toIndex = todoList.findIndex(t => t.id === targetId);
+
+            if (fromIndex !== -1 && toIndex !== -1) {
+                const [movedItem] = todoList.splice(fromIndex, 1);
+                todoList.splice(toIndex, 0, movedItem);
+
+                saveState();
+                saveTodoToGitHub();
+                render();
+            }
+        }
+
+        // To-Do / To-Add List Functions
+        function addTodoItem() {
+            if (!hasAdminAccess()) return;
+            const titleInput = document.getElementById('todoTitleInput');
+            const artistInput = document.getElementById('todoArtistInput');
+            
+            const title = titleInput.value.trim();
+            const artist = artistInput.value.trim();
+
+            if (!title) {
+                alert("Please enter a song title.");
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                title: title,
+                artist: artist || '',
+                done: false
+            };
+
+            todoList.unshift(newItem);
+            titleInput.value = '';
+            artistInput.value = '';
+
+            saveState();
+            saveTodoToGitHub();
+            render();
+        }
+
+        function toggleTodoDone(id) {
+            if (!hasAdminAccess()) return;
+            const item = todoList.find(t => t.id === id);
+            if (item) {
+                item.done = !item.done;
+                saveState();
+                saveTodoToGitHub();
+                render();
+            }
+        }
+
+        function deleteTodoItem(id) {
+            if (!hasAdminAccess()) return;
+            todoList = todoList.filter(t => t.id !== id);
+            saveState();
+            saveTodoToGitHub();
+            render();
+        }
+
+        function convertTodoToAddSong(id) {
+            const item = todoList.find(t => t.id === id);
+            if (!item) return;
+            openAddSongModal(item.artist, item.title);
+        }
+
+        function handleFileSelect(event) {
+            if (!hasAdminAccess()) return;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawRows = XLSX.utils.sheet_to_json(firstSheet);
+
+                songs = rawRows.map((r, i) => {
+                    const artist = String(r['Artist'] || r['artist'] || '').trim();
+                    const title = String(r['Song Title'] || r['Title'] || r['title'] || '').trim();
+                    const album = String(r['Album'] || r['album'] || 'Single').trim();
+                    const link = String(r['YouTube Link'] || r['Link'] || r['link'] || '').trim();
+                    const ytId = getYTId(link);
+
+                    return { id: i + 1, artist, title, album, link, ytId };
+                }).filter(s => s.artist && s.title && s.ytId);
+
+                saveState();
+                saveToGitHub(songs);
+                showArtistsView();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function setActiveTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+                b.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            if (tabId && document.getElementById(tabId)) {
+                document.getElementById(tabId).classList.add('bg-indigo-600', 'text-white');
+            }
+        }
+
+        function showArtistsView() { currentMode = 'artists'; selectedArtist = null; document.getElementById('artistBreadcrumb').classList.add('hidden'); setActiveTab('tab-artists'); render(); }
+        function showAllSongsView() { currentMode = 'all_songs'; selectedArtist = null; document.getElementById('artistBreadcrumb').classList.add('hidden'); setActiveTab('tab-all'); render(); }
+        function showFavsView() { currentMode = 'favs'; selectedArtist = null; document.getElementById('artistBreadcrumb').classList.add('hidden'); setActiveTab('tab-favs'); render(); }
+        function showRecentsView() { currentMode = 'recents'; selectedArtist = null; document.getElementById('artistBreadcrumb').classList.add('hidden'); setActiveTab('tab-recents'); render(); }
+        function showTodoView() { 
+            if (!hasAdminAccess()) return;
+            currentMode = 'todo'; selectedArtist = null; document.getElementById('artistBreadcrumb').classList.add('hidden'); setActiveTab('tab-todo'); render(); 
+        }
+
+        function selectArtist(artistName) {
+            // Uložíme pozíciu skrolovania pre hlavný <main> kontajner pred prechodom
+            const mainContainer = document.getElementById('mainScrollContainer');
+            if (mainContainer) {
+                sessionStorage.setItem('artistsScrollPosition', mainContainer.scrollTop.toString());
+            }
+
+            currentMode = 'artist_songs'; selectedArtist = artistName;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('artistBreadcrumb').classList.remove('hidden');
+            document.getElementById('selectedArtistName').innerText = artistName;
+            
+            const cat = getArtistCategory(artistName);
+            const catBadge = document.getElementById('selectedArtistCategory');
+            catBadge.innerText = cat;
+            catBadge.className = `text-xs px-2 py-0.5 rounded-md font-bold uppercase ${cat === 'mainstream' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-teal-500/20 text-teal-400 border border-teal-500/30'}`;
+
+            setActiveTab(null); render();
+        }
+
+        function handleSearch() { render(); }
+
+        function toggleFav(event, id) {
+            event.stopPropagation();
+            if (favorites.has(id)) {
+                favorites.delete(id);
+            } else {
+                favorites.add(id);
+            }
+            
+            saveState();
+            if (hasAdminAccess()) {
+                saveFavsToGitHub();
+            }
+            render();
+        }
+
+        function playSong(song) {
+            if (!song || !song.ytId) return;
+            recents = [song, ...recents.filter(s => s.id !== song.id)].slice(0, 30);
+            saveState();
+            window.open(`https://www.youtube.com/watch?v=${song.ytId}`, '_blank');
+        }
+
+        function filterByGlobalCategory(songList) {
+            if (categoryFilter === 'all') return songList;
+            return songList.filter(s => getArtistCategory(s.artist) === categoryFilter);
+        }
+
+        function pickRandomSong() {
+            let available = songs.filter(s => s.ytId);
+            available = filterByGlobalCategory(available);
+
+            if (available.length === 0) return alert(`No songs available for category: ${categoryFilter.toUpperCase()}`);
+            const currentRandomSong = available[Math.floor(Math.random() * available.length)];
+
+            document.getElementById('randomTypeTag').innerHTML = `<i class="fa-solid fa-dice mr-1"></i> Random Song (${categoryFilter.toUpperCase()})`;
+            document.getElementById('randomSongTitle').innerText = currentRandomSong.title;
+            document.getElementById('randomSongArtist').innerText = currentRandomSong.artist;
+            document.getElementById('randomSongAlbum').style.display = 'flex';
+            document.getElementById('randomSongAlbum').querySelector('span').innerText = currentRandomSong.album;
+
+            const base64Img = getArtistBase64Image(currentRandomSong.artist);
+            const imgContainer = document.getElementById('randomImageContainer');
+            imgContainer.innerHTML = base64Img 
+                ? `<img src="${base64Img}" class="w-full h-full object-cover">` 
+                : `<i class="fa-solid fa-music text-4xl text-slate-500"></i>`;
+
+            document.getElementById('randomPickAnotherBtn').onclick = function() { pickRandomSong(); };
+            document.getElementById('randomActionBtn').innerText = "Play Karaoke";
+            document.getElementById('randomActionBtn').onclick = function() { playSong(currentRandomSong); closeRandomModal(); };
+            document.getElementById('randomModal').classList.remove('hidden');
+        }
+
+        function pickRandomArtist() {
+            let availableArtists = [...new Set(songs.map(s => s.artist))].filter(Boolean);
+            if (categoryFilter !== 'all') {
+                availableArtists = availableArtists.filter(a => getArtistCategory(a) === categoryFilter);
+            }
+
+            if (availableArtists.length === 0) return alert(`No artists found for category: ${categoryFilter.toUpperCase()}`);
+            
+            const randomArtist = availableArtists[Math.floor(Math.random() * availableArtists.length)];
+            const artistSongCount = songs.filter(s => s.artist === randomArtist).length;
+
+            document.getElementById('randomTypeTag').innerHTML = `<i class="fa-solid fa-user-astronaut mr-1"></i> Random Artist (${categoryFilter.toUpperCase()})`;
+            document.getElementById('randomSongTitle').innerText = randomArtist;
+            document.getElementById('randomSongArtist').innerText = `${artistSongCount} ${artistSongCount === 1 ? 'song' : 'songs'} available`;
+            document.getElementById('randomSongAlbum').style.display = 'none';
+
+            const base64Img = getArtistBase64Image(randomArtist);
+            const imgContainer = document.getElementById('randomImageContainer');
+            imgContainer.innerHTML = base64Img 
+                ? `<img src="${base64Img}" class="w-full h-full object-cover">` 
+                : `<i class="fa-solid fa-user text-4xl text-slate-500"></i>`;
+
+            document.getElementById('randomPickAnotherBtn').onclick = function() { pickRandomArtist(); };
+            document.getElementById('randomActionBtn').innerText = "View Artist";
+            document.getElementById('randomActionBtn').onclick = function() { selectArtist(randomArtist); closeRandomModal(); };
+            document.getElementById('randomModal').classList.remove('hidden');
+        }
+
+        function closeRandomModal() { document.getElementById('randomModal').classList.add('hidden'); }
+
+        function renderRatingSelector(songId) {
+            const currentRating = ratings[songId] || 0;
+            return `
+                <div class="flex items-center gap-1 bg-slate-900/90 border border-slate-700/80 rounded-lg px-2 py-1 text-xs" onclick="event.stopPropagation()">
+                    <i class="fa-solid fa-star text-amber-400 text-[11px]"></i>
+                    <select onchange="setSongRating(event, ${songId}, Number(this.value))" class="bg-transparent text-amber-300 font-bold cursor-pointer focus:outline-none text-xs">
+                        <option value="0" class="bg-slate-900 text-slate-400" ${currentRating === 0 ? 'selected' : ''}>Unrated</option>
+                        ${[1,2,3,4,5,6,7,8,9,10].map(num => `
+                            <option value="${num}" class="bg-slate-900 text-amber-300" ${currentRating === num ? 'selected' : ''}>${num} pts</option>
+                        `).join('')}
+                    </select>
+                </div>
+            `;
+        }
+
+        function render() {
+            updateSortDropdown();
+
+            const container = document.getElementById('mainContainer');
+            const emptyState = document.getElementById('emptyState');
+            const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            document.getElementById('favCount').innerText = favorites.size;
+            document.getElementById('todoCount').innerText = todoList.filter(t => !t.done).length;
+            const isAdmin = hasAdminAccess();
+
+            // Render To-Do / To Add View
+            if (currentMode === 'todo') {
+                if (!isAdmin) { showArtistsView(); return; }
+
+                emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
+
+                let filteredTodo = [...todoList];
+                if (search) {
+                    filteredTodo = filteredTodo.filter(t => t.title.toLowerCase().includes(search) || t.artist.toLowerCase().includes(search));
+                }
+
+                const todoListHtml = filteredTodo.map(item => `
+                    <div draggable="true" 
+                         ondragstart="handleDragStart(event, ${item.id})" 
+                         ondragend="handleDragEnd(event)" 
+                         ondragover="handleDragOver(event)" 
+                         ondrop="handleDrop(event, ${item.id})"
+                         class="draggable-item glass rounded-xl p-3.5 px-4 flex items-center justify-between border ${item.done ? 'border-slate-800 bg-slate-900/40 opacity-60' : 'border-slate-700'} transition select-none">
+                        <div class="flex items-center gap-3.5 min-w-0 pr-4">
+                            <i class="fa-solid fa-grip-vertical text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing text-sm"></i>
+                            <button onclick="toggleTodoDone(${item.id})" class="text-lg ${item.done ? 'text-emerald-500' : 'text-slate-500 hover:text-slate-300'} transition">
+                                <i class="fa-${item.done ? 'solid fa-circle-check' : 'regular fa-circle'}"></i>
+                            </button>
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-semibold text-sm ${item.done ? 'line-through text-slate-400' : 'text-slate-100'} truncate">${item.title}</span>
+                                ${item.artist ? `<span class="text-xs text-indigo-400 font-medium truncate">${item.artist}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="convertTodoToAddSong(${item.id})" title="Add to Library" class="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white text-xs font-semibold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Song</span>
+                            </button>
+                            <button onclick="deleteTodoItem(${item.id})" title="Delete" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400 transition">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="max-w-3xl mx-auto flex flex-col gap-4">
+                        <div class="glass p-4 rounded-2xl border border-amber-500/30">
+                            <h2 class="text-base font-bold text-amber-400 mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check"></i> Wishlist / Songs to Add
+                            </h2>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" id="todoTitleInput" placeholder="Song Title *" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <input type="text" id="todoArtistInput" placeholder="Artist (Optional)" class="sm:w-48 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <button onclick="addTodoItem()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+                                    <i class="fa-solid fa-plus"></i> Queue Song
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            ${filteredTodo.length > 0 ? todoListHtml : '<p class="text-center text-slate-500 py-10 text-sm">No queued songs to display.</p>'}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let availableSongs = songs.filter(s => s && s.ytId);
+
+            if (availableSongs.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
+                document.getElementById('emptyMessage').innerText = isAdmin 
+                    ? 'No songs loaded. Add a song or import a playlist.'
+                    : 'No songs available.';
+                return;
+            }
+
+            emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
+
+            // Render Artists View
+            if (currentMode === 'artists') {
+                const artistMap = {};
+                availableSongs.forEach(s => { 
+                    if (s.artist) (artistMap[s.artist] = artistMap[s.artist] || []).push(s); 
+                });
+                let names = Object.keys(artistMap);
+
+                // Global Category Filter
+                if (categoryFilter !== 'all') {
+                    names = names.filter(name => getArtistCategory(name) === categoryFilter);
+                }
+
+                if (search) {
+                    names = names.filter(n => n.toLowerCase().includes(search) || artistMap[n].some(s => s.title.toLowerCase().includes(search)));
+                }
+
+                // Sorting for Artists
+                if (artistSortMode === 'name') {
+                    names.sort((a, b) => a.localeCompare(b));
+                } else {
+                    names.sort((a, b) => artistMap[b].length - artistMap[a].length || a.localeCompare(b));
+                }
+
+                const gridHtml = names.map(name => {
+                    const count = artistMap[name].length;
+                    const cat = getArtistCategory(name);
+                    const base64Img = getArtistBase64Image(name);
+                    const imageHtml = base64Img 
+                        ? `<img src="${base64Img}" class="w-full h-full object-cover group-hover:scale-105 transition">`
+                        : `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-user text-5xl"></i></div>`;
+
+                    const escapedName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `
+                        <div onclick="selectArtist('${escapedName}')" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
+                            <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
+                                ${imageHtml}
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-indigo-600/90 text-xs font-bold px-2 py-0.5 rounded-full text-white">${count} ${count === 1 ? 'song' : 'songs'}</div>
+                                
+                                <!-- Category Badge / Toggle -->
+                                <button onclick="toggleArtistCategory(event, '${escapedName}')" title="Click to change Mainstream/Alternative" class="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase shadow backdrop-blur-md transition ${cat === 'mainstream' ? 'bg-pink-600/90 text-white' : 'bg-teal-600/90 text-white'}">
+                                    ${cat === 'mainstream' ? 'Mainstream' : 'Alternative'}
+                                </button>
+
+                                ${isAdmin ? `
+                                    <button onclick="openArtistImageModal(event, '${escapedName}')" class="absolute top-2 left-2 p-1.5 rounded-lg bg-slate-950/70 text-slate-300 hover:text-indigo-400 z-10 transition">
+                                        <i class="fa-solid fa-camera text-xs"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="p-3 flex items-center justify-between">
+                                <h3 class="font-bold text-sm text-slate-100 group-hover:text-indigo-400 truncate">${name}</h3>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                container.innerHTML = gridHtml ? `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${gridHtml}</div>` : '<p class="text-center text-slate-500 py-10 text-sm">No artists found for selected category.</p>';
+
+                // Obnovenie skrolovania po vykreslení zoznamu
+                setTimeout(() => {
+                    const savedPosition = sessionStorage.getItem('artistsScrollPosition');
+                    const mainContainer = document.getElementById('mainScrollContainer');
+                    if (savedPosition && mainContainer) {
+                        mainContainer.scrollTop = parseInt(savedPosition, 10);
+                    }
+                }, 0);
+
+                return;
+            }
+
+            // Render Artist Songs View
+            if (currentMode === 'artist_songs') {
+                let artistSongs = availableSongs.filter(s => s.artist === selectedArtist);
+                if (search) artistSongs = artistSongs.filter(s => s.title.toLowerCase().includes(search));
+                document.getElementById('selectedArtistCount').innerText = `${artistSongs.length} songs`;
+
+                const listHtml = artistSongs.map((song, i) => `
+                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl p-3.5 px-4 flex items-center justify-between cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition group gap-3">
+                        <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                            <span class="text-xs font-semibold text-slate-500 w-6 text-right">${i + 1}</span>
+                            <i class="fa-solid fa-circle-play text-indigo-400 text-lg"></i>
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-semibold text-sm text-slate-100 group-hover:text-indigo-300 truncate">${song.title}</span>
+                                <span class="text-xs text-slate-400 font-medium truncate">${song.album}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            ${renderRatingSelector(song.id)}
+                            <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-pink-400"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
+                            ${isAdmin ? `
+                                <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            ` : ''}
+                        </div>
+                    </div>`).join('');
+
+                container.innerHTML = `<div class="max-w-4xl mx-auto flex flex-col gap-2">${listHtml}</div>`;
+
+                // Pri náhľade detailu umelca odskrolujeme hlavný kontajner na vrch
+                const mainContainer = document.getElementById('mainScrollContainer');
+                if (mainContainer) mainContainer.scrollTop = 0;
+
+                return;
+            }
+
+            // Render All Songs / Favs / Recents View
+            let songList = currentMode === 'favs' ? availableSongs.filter(s => favorites.has(s.id))
+                         : currentMode === 'recents' ? recents.filter(s => s.ytId)
+                         : [...availableSongs];
+
+            // Apply Global Category Filter
+            songList = filterByGlobalCategory(songList);
+
+            if (search) {
+                songList = songList.filter(s => (s.artist || '').toLowerCase().includes(search) || (s.title || '').toLowerCase().includes(search) || (s.album || '').toLowerCase().includes(search));
+            }
+
+            // Sorting for All Songs & Favorites
+            if (currentMode === 'all_songs') {
+                if (allSongsSortMode === 'title') {
+                    songList.sort((a, b) => a.title.localeCompare(b.title));
+                } else {
+                    songList.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
+                }
+            } else if (currentMode === 'favs') {
+                if (favsSortMode === 'rating_desc') {
+                    songList.sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0) || a.title.localeCompare(b.title));
+                } else if (favsSortMode === 'rating_asc') {
+                    songList.sort((a, b) => (ratings[a.id] || 0) - (ratings[b.id] || 0) || a.title.localeCompare(b.title));
+                } else if (favsSortMode === 'title') {
+                    songList.sort((a, b) => a.title.localeCompare(b.title));
+                } else if (favsSortMode === 'artist') {
+                    songList.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
+                }
+            }
+
+            const gridHtml = songList.map(song => {
+                const base64Img = getArtistBase64Image(song.artist);
+                const imageHtml = base64Img 
+                    ? `<img src="${base64Img}" class="w-full h-full object-cover group-hover:scale-105 transition">` 
+                    : `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-music text-4xl"></i></div>`;
+
+                const songRating = ratings[song.id] || 0;
+
+                return `
+                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
+                        <div class="relative h-36 w-full bg-slate-900 overflow-hidden">
+                            ${imageHtml}
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                            
+                            <!-- Rating Badge / Star Top Left -->
+                            ${songRating > 0 ? `
+                                <div class="absolute top-2 left-2 bg-amber-500/90 text-slate-950 font-black text-xs px-2 py-0.5 rounded-md shadow backdrop-blur-md flex items-center gap-1 z-10">
+                                    <i class="fa-solid fa-star text-[10px]"></i> ${songRating}/10
+                                </div>
+                            ` : ''}
+
+                            <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
+                                <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-pink-500"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
+                                ${isAdmin ? `
+                                    <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                    <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="p-3 flex flex-col justify-between flex-1 gap-2">
+                            <div>
+                                <h3 class="font-bold text-sm line-clamp-1 text-slate-100 group-hover:text-indigo-400">${song.title}</h3>
+                                <p class="text-xs text-slate-400 line-clamp-1 mt-0.5">${song.artist}</p>
+                            </div>
+                            <div class="pt-1 border-t border-slate-800/80 flex items-center justify-between">
+                                <span class="text-[10px] text-slate-500 uppercase font-semibold">Rating</span>
+                                ${renderRatingSelector(song.id)}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            container.innerHTML = gridHtml ? `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${gridHtml}</div>` : '<p class="text-center text-slate-500 py-10 text-sm">No songs match the selected filters.</p>';
+        }
+    </script>
+</body>
+</html>
