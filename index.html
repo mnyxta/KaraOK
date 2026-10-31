@@ -15,16 +15,42 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .draggable-item { cursor: grab; }
         .draggable-item.dragging { opacity: 0.4; border-style: dashed; border-color: #f59e0b; }
+        #sortSelect option {
+            color: #0f172a;
+            background-color: #ffffff;
+        }
+        .tab-btn { white-space: nowrap; flex-shrink: 0; }
+        .action-btn { min-height: 44px; justify-content: center; white-space: nowrap; }
+        .admin-actions.hidden { display: none !important; }
+        #sortSelect { min-width: 0; }
+        #mainScrollContainer { min-height: 0; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+        .fixed.inset-0 > .glass { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+        @supports (height: 100dvh) { body { height: 100dvh; } }
+        @media (max-width: 639px) {
+            .picker-btn { flex-direction: column; gap: .3rem; min-height: 58px; padding: .45rem .2rem; font-size: 11px; line-height: 1.15; }
+            .picker-btn i { font-size: 15px; }
+            #sortControls { min-width: 0; }
+            #sortSelect { width: 100%; text-overflow: ellipsis; overflow: hidden; font-size: 11px; }
+            #categoryControls { min-width: 0; }
+            #categoryControls button { padding-left: .25rem; padding-right: .25rem; min-height: 32px; }
+            #viewTabs { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
+            #viewTabs::-webkit-scrollbar { height: 3px; }
+            #viewTabs::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+            .mobile-tap { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+            .mobile-song-thumbnail { width: 104px; flex-shrink: 0; align-self: stretch; height: auto; min-height: 112px; }
+            .mobile-artist-thumbnail { width: 112px; flex-shrink: 0; align-self: stretch; height: auto; min-height: 110px; }
+        }
+
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" onload="initApp()">
 
     <!-- Header -->
-    <header class="glass sticky top-0 z-20 px-4 py-3 flex flex-col md:flex-row gap-3 items-center justify-between shadow-xl">
-        <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+    <header class="glass relative z-20 px-3 sm:px-4 py-3 flex flex-col gap-2.5 lg:gap-3 shadow-xl">
+        <div class="relative w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 lg:gap-4">
             <!-- App Name & Logo -->
-            <button onclick="showArtistsView()" class="hover:opacity-80 transition cursor-pointer flex items-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" class="h-9 w-auto block">
+            <button onclick="showArtistsView()" aria-label="KaraOK – Artists" class="hover:opacity-80 transition cursor-pointer flex items-center justify-start w-fit min-h-[44px] shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" class="h-8 sm:h-9 w-auto block">
                     <text x="0" y="70" font-family="'Arial Black', 'Inter', 'Montserrat', sans-serif" font-weight="900" font-size="78" fill="#FFFFFF" letter-spacing="-3">Kara</text>
                     <g transform="translate(202, 8)">
                         <circle cx="33" cy="33" r="32" fill="#FF3B30"/>
@@ -40,54 +66,57 @@
                 </svg>
             </button>
             
-            <div class="flex flex-wrap items-center justify-end gap-2">
+            <div class="w-full lg:w-auto flex flex-col lg:flex-row lg:items-center gap-2">
+                <div id="adminActions" class="admin-actions hidden grid-cols-2 w-full lg:w-auto lg:flex lg:items-center gap-2">
                 <!-- Import Button -->
-                <label id="importBtn" class="hidden cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
+                <label id="importBtn" class="hidden action-btn w-full cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-file-import"></i> <span>Import Playlist</span>
                     <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
 
                 <!-- Add Song Button -->
-                <button id="addSongBtn" onclick="openAddSongModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
+                <button id="addSongBtn" onclick="openAddSongModal()" class="hidden action-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-semibold transition items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Add Song
                 </button>
-
-                <button onclick="pickRandomSong()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-shuffle"></i> Random Song
+                </div>
+                <div class="grid grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
+                    <button onclick="pickRandomSong()" class="action-btn picker-btn w-full bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-shuffle"></i> <span>Random Song</span>
                 </button>
 
-                <button onclick="openFavoriteRangeModal()" class="bg-pink-600 hover:bg-pink-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-heart"></i> Random Favorite
+                <button onclick="openFavoriteRangeModal()" class="action-btn picker-btn w-full bg-pink-600 hover:bg-pink-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-heart"></i> <span>Random Favorite</span>
                 </button>
 
-                <button onclick="pickRandomArtist()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-user-astronaut"></i> Random Artist
+                <button onclick="pickRandomArtist()" class="action-btn picker-btn w-full bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-user-astronaut"></i> <span>Random Artist</span>
                 </button>
 
-                <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
+                </div>
+                <button onclick="openSettingsModal()" class="action-btn absolute top-0 right-0 lg:static w-auto lg:w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-right-to-bracket"></i> Login
                 </button>
             </div>
         </div>
 
         <!-- Search & Global Category Filter & Sort Options -->
-        <div class="relative w-full md:w-auto flex flex-wrap sm:flex-nowrap items-center gap-2">
-            <div class="relative flex-1 md:w-56">
+        <div class="w-full grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2">
+            <div class="relative col-span-2 w-full sm:flex-1 md:w-56 min-w-0">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search artist, song, or album..." 
                        class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition">
             </div>
 
             <!-- Contextual Sort Dropdown -->
-            <div id="sortControls" class="flex items-center bg-slate-900/90 px-2 py-1.5 rounded-xl border border-slate-700 text-xs text-slate-300 gap-1.5">
+            <div id="sortControls" class="flex items-center min-w-0 w-full sm:w-auto bg-slate-900/90 px-2 py-1.5 rounded-xl border border-slate-700 text-xs text-slate-300 gap-1.5">
                 <i class="fa-solid fa-arrow-down-wide-short text-indigo-400"></i>
-                <select id="sortSelect" onchange="handleSortChange(this.value)" class="bg-transparent font-semibold focus:outline-none cursor-pointer text-xs text-white">
+                <select id="sortSelect" onchange="handleSortChange(this.value)" class="bg-transparent font-semibold focus:outline-none cursor-pointer text-xs text-white w-full sm:w-auto">
                     <!-- Populated dynamically based on active tab -->
                 </select>
             </div>
 
             <!-- Global Category Toggle -->
-            <div class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700 text-xs font-semibold">
+            <div id="categoryControls" class="flex items-center justify-between sm:justify-start w-full sm:w-auto bg-slate-900/90 p-1 rounded-xl border border-slate-700 text-xs font-semibold gap-1">
                 <button id="catFilter-all" onclick="setCategoryFilter('all')" class="px-2.5 py-1 rounded-lg text-white bg-indigo-600 transition">Both</button>
                 <button id="catFilter-mainstream" onclick="setCategoryFilter('mainstream')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1">
                     <span class="w-2 h-2 rounded-full bg-pink-500 inline-block"></span> Main
@@ -98,7 +127,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 w-full md:w-auto justify-center overflow-x-auto hide-scrollbar">
+        <div id="viewTabs" role="navigation" aria-label="Views" class="flex items-center gap-2 w-full justify-start lg:justify-center overflow-x-auto pb-1">
             <button onclick="showArtistsView()" id="tab-artists" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">Artists</button>
             <button onclick="showAllSongsView()" id="tab-all" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 transition">All Songs</button>
             <button onclick="showFavsView()" id="tab-favs" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 transition">Favorites (<span id="favCount">0</span>)</button>
@@ -116,18 +145,18 @@
     </div>
 
     <!-- Artist Breadcrumb -->
-    <div id="artistBreadcrumb" class="hidden glass px-6 py-2.5 flex items-center justify-between border-b border-slate-800">
+    <div id="artistBreadcrumb" class="hidden glass px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800">
         <button onclick="showArtistsView()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-200 font-semibold flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Back to Artists
         </button>
-        <div class="flex items-center gap-2">
-            <span id="selectedArtistName" class="text-base font-bold text-indigo-400"></span>
+        <div class="flex items-center gap-2 min-w-0 max-w-full">
+            <span id="selectedArtistName" class="text-sm sm:text-base font-bold text-indigo-400 truncate"></span>
             <span id="selectedArtistCategory" class="text-xs px-2 py-0.5 rounded-md font-bold uppercase"></span>
             <span id="selectedArtistCount" class="text-xs bg-indigo-600/30 text-indigo-300 px-2.5 py-0.5 rounded-full font-semibold"></span>
         </div>
     </div>
 
-    <main id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 md:p-6">
+    <main id="mainScrollContainer" class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
         <div id="mainContainer"></div>
         <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-slate-500">
             <i class="fa-solid fa-compact-disc text-5xl mb-3 animate-spin"></i>
@@ -286,6 +315,7 @@
                     <button type="button" onclick="closeFavoriteRangeModal()" class="bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold">Cancel</button>
                 </div>
             </form>
+            <button type="button" id="favoriteResetHistoryBtn" onclick="resetRandomSongHistory()" class="hidden text-xs font-semibold text-slate-400 hover:text-amber-300 mt-4 mx-auto block"><i class="fa-solid fa-rotate-left mr-1"></i>Reset session picks</button>
         </div>
     </div>
 
@@ -300,10 +330,14 @@
             <p id="randomSongAlbum" class="text-xs text-slate-400 font-medium mb-6 flex items-center gap-1"><i class="fa-solid fa-compact-disc"></i> <span></span></p>
             <p id="randomFavoriteRating" class="hidden text-xs text-amber-300 font-semibold mb-4"><i class="fa-solid fa-star mr-1"></i><span></span></p>
             <div class="flex items-center gap-3 w-full">
-                <button id="randomPickAnotherBtn" onclick="pickRandomSong()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold text-xs border border-slate-700">Pick Another</button>
+                <button id="randomPickAnotherBtn" onclick="pickRandomSong()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold text-xs border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">Pick Another</button>
                 <button id="randomActionBtn" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-xs">Play Karaoke</button>
             </div>
-            <button id="favoriteChangeRangeBtn" onclick="openFavoriteRangeModal()" class="hidden text-xs font-semibold text-pink-300 hover:text-pink-200 mt-4">Change rating range</button>
+            <p id="randomSessionStatus" role="status" aria-live="polite" class="hidden text-xs text-slate-400 mt-3"></p>
+            <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-4">
+                <button id="favoriteChangeRangeBtn" onclick="openFavoriteRangeModal()" class="hidden text-xs font-semibold text-pink-300 hover:text-pink-200">Change rating range</button>
+                <button id="randomResetHistoryBtn" onclick="resetRandomSongHistory()" class="hidden text-xs font-semibold text-slate-400 hover:text-amber-300"><i class="fa-solid fa-rotate-left mr-1"></i>Reset session picks</button>
+            </div>
         </div>
     </div>
 
@@ -322,11 +356,26 @@
         let draggedTodoId = null;
         let categoryFilter = 'all'; // 'all' | 'mainstream' | 'alternative'
         let favoriteRandomRange = { min: 8, max: 10 }; // Last range used by Random Favorite
+        const RANDOM_SESSION_KEY = 'karaoke_random_seen_song_ids';
+        // One history for both random song pickers, kept only in this browser tab's session.
+        function readRandomSongHistory() {
+            try {
+                const data = JSON.parse(sessionStorage.getItem(RANDOM_SESSION_KEY) || '[]');
+                return new Set(Array.isArray(data) ? data.map(String) : []);
+            } catch (error) {
+                console.warn('Could not load random song session history:', error);
+                return new Set();
+            }
+        }
+        let pickedRandomSongIds = readRandomSongHistory();
+        let currentRandomPicker = null; // 'song' | 'favorite' | null (Random Artist)
+        let randomModalExhausted = false;
 
         // Sorting preferences
         let artistSortMode = 'count'; // 'count' | 'name'
-        let allSongsSortMode = 'artist'; // 'artist' | 'title'
-        let favsSortMode = 'rating_desc'; // 'rating_desc' | 'rating_asc' | 'title' | 'artist'
+        let artistSongsSortMode = 'original'; // 'original' | 'id_desc' | 'id_asc'
+        let allSongsSortMode = 'artist'; // 'artist' | 'title' | 'id_desc' | 'id_asc'
+        let favsSortMode = 'rating_desc'; // 'rating_desc' | 'rating_asc' | 'title' | 'artist' | 'id_desc' | 'id_asc'
 
         function hasAdminAccess() {
             const token = localStorage.getItem('gh_token');
@@ -338,6 +387,9 @@
             const addSongBtn = document.getElementById('addSongBtn');
             const tabTodo = document.getElementById('tab-todo');
             const isAdmin = hasAdminAccess();
+            const adminActions = document.getElementById('adminActions');
+            adminActions.classList.toggle('hidden', !isAdmin);
+            adminActions.classList.toggle('grid', isAdmin);
 
             if (isAdmin) {
                 importBtn.classList.remove('hidden'); importBtn.classList.add('flex');
@@ -360,11 +412,20 @@
                     <option value="count" ${artistSortMode === 'count' ? 'selected' : ''}>Sort: Song Count</option>
                     <option value="name" ${artistSortMode === 'name' ? 'selected' : ''}>Sort: Artist A-Z</option>
                 `;
+            } else if (currentMode === 'artist_songs') {
+                container.classList.remove('hidden');
+                select.innerHTML = `
+                    <option value="original" ${artistSongsSortMode === 'original' ? 'selected' : ''}>Sort: Default</option>
+                    <option value="id_desc" ${artistSongsSortMode === 'id_desc' ? 'selected' : ''}>Sort: Song ID (high → low)</option>
+                    <option value="id_asc" ${artistSongsSortMode === 'id_asc' ? 'selected' : ''}>Sort: Song ID (low → high)</option>
+                `;
             } else if (currentMode === 'all_songs') {
                 container.classList.remove('hidden');
                 select.innerHTML = `
                     <option value="artist" ${allSongsSortMode === 'artist' ? 'selected' : ''}>Sort: Artist A-Z</option>
                     <option value="title" ${allSongsSortMode === 'title' ? 'selected' : ''}>Sort: Title A-Z</option>
+                    <option value="id_desc" ${allSongsSortMode === 'id_desc' ? 'selected' : ''}>Sort: Song ID (high → low)</option>
+                    <option value="id_asc" ${allSongsSortMode === 'id_asc' ? 'selected' : ''}>Sort: Song ID (low → high)</option>
                 `;
             } else if (currentMode === 'favs') {
                 container.classList.remove('hidden');
@@ -373,6 +434,8 @@
                     <option value="rating_asc" ${favsSortMode === 'rating_asc' ? 'selected' : ''}>Sort: Lowest Rated (1→10)</option>
                     <option value="artist" ${favsSortMode === 'artist' ? 'selected' : ''}>Sort: Artist A-Z</option>
                     <option value="title" ${favsSortMode === 'title' ? 'selected' : ''}>Sort: Title A-Z</option>
+                    <option value="id_desc" ${favsSortMode === 'id_desc' ? 'selected' : ''}>Sort: Song ID (high → low)</option>
+                    <option value="id_asc" ${favsSortMode === 'id_asc' ? 'selected' : ''}>Sort: Song ID (low → high)</option>
                 `;
             } else {
                 container.classList.add('hidden');
@@ -381,6 +444,7 @@
 
         function handleSortChange(val) {
             if (currentMode === 'artists') artistSortMode = val;
+            else if (currentMode === 'artist_songs') artistSongsSortMode = val;
             else if (currentMode === 'all_songs') allSongsSortMode = val;
             else if (currentMode === 'favs') favsSortMode = val;
             render();
@@ -1099,8 +1163,73 @@
             return songList.filter(s => getArtistCategory(s.artist) === categoryFilter);
         }
 
+        // Random Song and Random Favorite share their session history: switching filters
+        // or rating ranges must never reintroduce a song already drawn in this tab.
+        function unpickedRandomSongs(eligibleSongs) {
+            return eligibleSongs.filter(song => !pickedRandomSongIds.has(String(song.id)));
+        }
+
+        function recordRandomSongPick(song) {
+            pickedRandomSongIds.add(String(song.id));
+            try {
+                sessionStorage.setItem(RANDOM_SESSION_KEY, JSON.stringify([...pickedRandomSongIds]));
+            } catch (error) {
+                console.warn('Could not save random song session history:', error);
+            }
+        }
+
+        function getEligibleRandomSongs(isFavorite) {
+            return isFavorite
+                ? getMatchingFavoriteSongs(favoriteRandomRange.min, favoriteRandomRange.max)
+                : filterByGlobalCategory(songs.filter(song => song.ytId));
+        }
+
+        function updateRandomSessionControls() {
+            const isFavorite = currentRandomPicker === 'favorite';
+            const isSong = currentRandomPicker === 'song';
+            const status = document.getElementById('randomSessionStatus');
+            const resetButton = document.getElementById('randomResetHistoryBtn');
+            const pickButton = document.getElementById('randomPickAnotherBtn');
+            if (!isFavorite && !isSong) {
+                status.classList.add('hidden');
+                resetButton.classList.add('hidden');
+                pickButton.disabled = false;
+                pickButton.innerText = 'Pick Another';
+                return;
+            }
+            const eligible = getEligibleRandomSongs(isFavorite);
+            const remaining = unpickedRandomSongs(eligible).length;
+            status.innerText = `${remaining} of ${eligible.length} matching songs left this session.`;
+            status.classList.remove('hidden');
+            resetButton.classList.toggle('hidden', pickedRandomSongIds.size === 0);
+            pickButton.disabled = remaining === 0;
+            pickButton.innerText = remaining === 0 ? 'All Picked' : 'Pick Another';
+        }
+
+        function resetRandomSongHistory() {
+            if (!pickedRandomSongIds.size) return;
+            if (!window.confirm('Reset all random picks for this session? Previously picked songs may appear again in both Random Song and Random Favorite.')) return;
+            pickedRandomSongIds.clear();
+            try {
+                sessionStorage.removeItem(RANDOM_SESSION_KEY);
+            } catch (error) {
+                console.warn('Could not clear random song session history:', error);
+            }
+            updateFavoriteRangePreview();
+            if (!document.getElementById('randomModal').classList.contains('hidden')) {
+                if (randomModalExhausted) {
+                    if (currentRandomPicker === 'favorite') openFavoriteRangeModal();
+                    else if (currentRandomPicker === 'song') pickRandomSong();
+                } else {
+                    updateRandomSessionControls();
+                }
+            }
+        }
+
         // Shared song result dialog for Random Song and Random Favorite.
         function showRandomSongResult(song, typeLabel, pickAgain, isFavorite = false) {
+            currentRandomPicker = isFavorite ? 'favorite' : 'song';
+            randomModalExhausted = false;
             document.getElementById('randomTypeTag').innerHTML = typeLabel;
             document.getElementById('randomSongTitle').innerText = song.title;
             document.getElementById('randomSongArtist').innerText = song.artist;
@@ -1116,19 +1245,49 @@
             ratingElement.classList.toggle('hidden', !isFavorite);
             if (isFavorite) ratingElement.querySelector('span').innerText = `${ratings[song.id]}/10 points`;
             document.getElementById('favoriteChangeRangeBtn').classList.toggle('hidden', !isFavorite);
-
             document.getElementById('randomPickAnotherBtn').onclick = pickAgain;
+            document.getElementById('randomActionBtn').classList.remove('hidden');
             document.getElementById('randomActionBtn').innerText = 'Play Karaoke';
             document.getElementById('randomActionBtn').onclick = function() { playSong(song); closeRandomModal(); };
+            updateRandomSessionControls();
+            document.getElementById('randomModal').classList.remove('hidden');
+        }
+
+        function showRandomSongExhausted(isFavorite) {
+            currentRandomPicker = isFavorite ? 'favorite' : 'song';
+            randomModalExhausted = true;
+            const range = favoriteRandomRange;
+            const eligible = getEligibleRandomSongs(isFavorite);
+            document.getElementById('randomTypeTag').innerHTML = isFavorite
+                ? '<i class="fa-solid fa-heart mr-1"></i> Random Favorite'
+                : '<i class="fa-solid fa-dice mr-1"></i> Random Song';
+            document.getElementById('randomSongTitle').innerText = 'All songs picked!';
+            document.getElementById('randomSongArtist').innerText = isFavorite
+                ? `You've already picked all ${eligible.length} eligible favorites rated ${range.min}–${range.max}.`
+                : `You've already picked all ${eligible.length} eligible songs in this category.`;
+            document.getElementById('randomSongAlbum').style.display = 'none';
+            document.getElementById('randomImageContainer').innerHTML = '<i class="fa-solid fa-circle-check text-4xl text-emerald-400"></i>';
+            document.getElementById('randomFavoriteRating').classList.add('hidden');
+            document.getElementById('favoriteChangeRangeBtn').classList.toggle('hidden', !isFavorite);
+            document.getElementById('randomPickAnotherBtn').onclick = isFavorite ? pickRandomFavorite : pickRandomSong;
+            document.getElementById('randomActionBtn').classList.add('hidden');
+            updateRandomSessionControls();
             document.getElementById('randomModal').classList.remove('hidden');
         }
 
         function pickRandomSong() {
-            let available = songs.filter(s => s.ytId);
-            available = filterByGlobalCategory(available);
-
-            if (available.length === 0) return alert(`No songs available for category: ${categoryFilter.toUpperCase()}`);
+            const eligible = getEligibleRandomSongs(false);
+            if (eligible.length === 0) {
+                alert(`No songs available for category: ${categoryFilter.toUpperCase()}`);
+                return;
+            }
+            const available = unpickedRandomSongs(eligible);
+            if (available.length === 0) {
+                showRandomSongExhausted(false);
+                return;
+            }
             const chosenSong = available[Math.floor(Math.random() * available.length)];
+            recordRandomSongPick(chosenSong);
             showRandomSongResult(chosenSong, `<i class="fa-solid fa-dice mr-1"></i> Random Song (${categoryFilter.toUpperCase()})`, pickRandomSong);
         }
 
@@ -1145,6 +1304,8 @@
             const max = Number(document.getElementById('favoriteMaxRating').value);
             const preview = document.getElementById('favoriteRangePreview');
             const pickButton = document.getElementById('favoritePickBtn');
+            const resetButton = document.getElementById('favoriteResetHistoryBtn');
+            resetButton.classList.toggle('hidden', pickedRandomSongIds.size === 0);
 
             if (min > max) {
                 preview.innerText = 'Minimum rating cannot be higher than maximum rating.';
@@ -1152,11 +1313,14 @@
                 return;
             }
 
-            const count = getMatchingFavoriteSongs(min, max).length;
-            preview.innerText = count === 0
+            const eligible = getMatchingFavoriteSongs(min, max);
+            const remaining = unpickedRandomSongs(eligible).length;
+            preview.innerText = eligible.length === 0
                 ? 'No rated favorites match this range and the current category filter.'
-                : `${count} matching ${count === 1 ? 'favorite' : 'favorites'} (${categoryFilter.toUpperCase()})`;
-            pickButton.disabled = count === 0;
+                : remaining === 0
+                    ? `All ${eligible.length} matching favorites have been picked this session. Change the range or reset the session picks.`
+                    : `${remaining} of ${eligible.length} matching ${eligible.length === 1 ? 'favorite' : 'favorites'} still unpicked (${categoryFilter.toUpperCase()}).`;
+            pickButton.disabled = remaining === 0;
         }
 
         function openFavoriteRangeModal() {
@@ -1175,21 +1339,33 @@
         function pickRandomFavorite() {
             const min = Number(document.getElementById('favoriteMinRating').value);
             const max = Number(document.getElementById('favoriteMaxRating').value);
-            const available = getMatchingFavoriteSongs(min, max);
-            if (!available.length) {
+            const eligible = getMatchingFavoriteSongs(min, max);
+            if (!eligible.length) {
                 updateFavoriteRangePreview();
                 return;
             }
-
             favoriteRandomRange = { min, max };
+            const available = unpickedRandomSongs(eligible);
+            if (!available.length) {
+                updateFavoriteRangePreview();
+                if (document.getElementById('favoriteRangeModal').classList.contains('hidden')) {
+                    showRandomSongExhausted(true);
+                }
+                return;
+            }
             closeFavoriteRangeModal();
             const chosenSong = available[Math.floor(Math.random() * available.length)];
+            recordRandomSongPick(chosenSong);
             showRandomSongResult(chosenSong,
                 `<i class="fa-solid fa-heart mr-1"></i> Random Favorite (${min}–${max} pts · ${categoryFilter.toUpperCase()})`,
                 pickRandomFavorite, true);
         }
 
         function pickRandomArtist() {
+            currentRandomPicker = null;
+            randomModalExhausted = false;
+            document.getElementById('randomActionBtn').classList.remove('hidden');
+            updateRandomSessionControls();
             document.getElementById('randomFavoriteRating').classList.add('hidden');
             document.getElementById('favoriteChangeRangeBtn').classList.add('hidden');
             let availableArtists = [...new Set(songs.map(s => s.artist))].filter(Boolean);
@@ -1226,7 +1402,7 @@
             return `
                 <div class="flex items-center gap-1 bg-slate-900/90 border border-slate-700/80 rounded-lg px-2 py-1 text-xs" onclick="event.stopPropagation()">
                     <i class="fa-solid fa-star text-amber-400 text-[11px]"></i>
-                    <select onchange="setSongRating(event, ${songId}, Number(this.value))" class="bg-transparent text-amber-300 font-bold cursor-pointer focus:outline-none text-xs">
+                    <select onchange="setSongRating(event, ${songId}, Number(this.value))" class="bg-transparent text-amber-300 font-bold cursor-pointer focus:outline-none text-xs min-h-[28px]">
                         <option value="0" class="bg-slate-900 text-slate-400" ${currentRating === 0 ? 'selected' : ''}>Unrated</option>
                         ${[1,2,3,4,5,6,7,8,9,10].map(num => `
                             <option value="${num}" class="bg-slate-900 text-amber-300" ${currentRating === num ? 'selected' : ''}>${num} pts</option>
@@ -1354,11 +1530,11 @@
 
                     const escapedName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     return `
-                        <div onclick="selectArtist('${escapedName}')" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
-                            <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
+                        <div onclick="selectArtist('${escapedName}')" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 sm:hover:scale-[1.02] transition flex flex-row sm:flex-col group relative">
+                            <div class="mobile-artist-thumbnail relative sm:h-44 sm:w-full bg-slate-900 overflow-hidden">
                                 ${imageHtml}
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                                <div class="absolute top-2 right-2 bg-indigo-600/90 text-xs font-bold px-2 py-0.5 rounded-full text-white">${count} ${count === 1 ? 'song' : 'songs'}</div>
+                                <div class="hidden sm:block absolute top-2 right-2 bg-indigo-600/90 text-xs font-bold px-2 py-0.5 rounded-full text-white">${count} ${count === 1 ? 'song' : 'songs'}</div>
                                 
                                 <!-- Category Badge / Toggle -->
                                 <button onclick="toggleArtistCategory(event, '${escapedName}')" title="Click to change Mainstream/Alternative" class="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase shadow backdrop-blur-md transition ${cat === 'mainstream' ? 'bg-pink-600/90 text-white' : 'bg-teal-600/90 text-white'}">
@@ -1371,9 +1547,12 @@
                                     </button>
                                 ` : ''}
                             </div>
-                            <div class="p-3 flex items-center justify-between">
-                                <h3 class="font-bold text-sm text-slate-100 group-hover:text-indigo-400 truncate">${name}</h3>
-                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            <div class="p-3 flex-1 min-w-0 flex items-center justify-between gap-2 sm:flex-none">
+                                <div class="min-w-0 flex flex-col gap-1.5">
+                                    <h3 class="font-bold text-sm text-slate-100 group-hover:text-indigo-400 break-words line-clamp-2 sm:truncate">${name}</h3>
+                                    <span class="sm:hidden text-xs text-indigo-300 font-semibold">${count} ${count === 1 ? 'song' : 'songs'}</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500 shrink-0"></i>
                             </div>
                         </div>`;
                 }).join('');
@@ -1396,11 +1575,13 @@
             if (currentMode === 'artist_songs') {
                 let artistSongs = availableSongs.filter(s => s.artist === selectedArtist);
                 if (search) artistSongs = artistSongs.filter(s => s.title.toLowerCase().includes(search));
+                if (artistSongsSortMode === 'id_desc') artistSongs.sort((a, b) => Number(b.id) - Number(a.id));
+                else if (artistSongsSortMode === 'id_asc') artistSongs.sort((a, b) => Number(a.id) - Number(b.id));
                 document.getElementById('selectedArtistCount').innerText = `${artistSongs.length} songs`;
 
                 const listHtml = artistSongs.map((song, i) => `
-                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl p-3.5 px-4 flex items-center justify-between cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition group gap-3">
-                        <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl p-3 sm:p-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition group gap-2.5">
+                        <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 w-full sm:w-auto sm:flex-1">
                             <span class="text-xs font-semibold text-slate-500 w-6 text-right">${i + 1}</span>
                             <i class="fa-solid fa-circle-play text-indigo-400 text-lg"></i>
                             <div class="flex flex-col min-w-0">
@@ -1408,12 +1589,12 @@
                                 <span class="text-xs text-slate-400 font-medium truncate">${song.album}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
+                        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end border-t border-slate-700/40 pt-2 sm:border-0 sm:pt-0">
                             ${renderRatingSelector(song.id)}
-                            <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-pink-400"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
+                            <button onclick="toggleFav(event, ${song.id})" class="mobile-tap rounded-lg bg-slate-800 text-slate-400 hover:text-pink-400"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
                             ${isAdmin ? `
-                                <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
-                                <button onclick="deleteSong(event, ${song.id})" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                <button onclick="openEditSongModal(event, ${song.id})" class="mobile-tap rounded-lg bg-slate-800 text-slate-400 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                <button onclick="deleteSong(event, ${song.id})" class="mobile-tap rounded-lg bg-slate-800 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash-can text-sm"></i></button>
                             ` : ''}
                         </div>
                     </div>`).join('');
@@ -1441,13 +1622,21 @@
 
             // Sorting for All Songs & Favorites
             if (currentMode === 'all_songs') {
-                if (allSongsSortMode === 'title') {
+                if (allSongsSortMode === 'id_desc') {
+                    songList.sort((a, b) => Number(b.id) - Number(a.id));
+                } else if (allSongsSortMode === 'id_asc') {
+                    songList.sort((a, b) => Number(a.id) - Number(b.id));
+                } else if (allSongsSortMode === 'title') {
                     songList.sort((a, b) => a.title.localeCompare(b.title));
                 } else {
                     songList.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
                 }
             } else if (currentMode === 'favs') {
-                if (favsSortMode === 'rating_desc') {
+                if (favsSortMode === 'id_desc') {
+                    songList.sort((a, b) => Number(b.id) - Number(a.id));
+                } else if (favsSortMode === 'id_asc') {
+                    songList.sort((a, b) => Number(a.id) - Number(b.id));
+                } else if (favsSortMode === 'rating_desc') {
                     songList.sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0) || a.title.localeCompare(b.title));
                 } else if (favsSortMode === 'rating_asc') {
                     songList.sort((a, b) => (ratings[a.id] || 0) - (ratings[b.id] || 0) || a.title.localeCompare(b.title));
@@ -1467,8 +1656,8 @@
                 const songRating = ratings[song.id] || 0;
 
                 return `
-                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 hover:scale-[1.02] transition flex flex-col group relative">
-                        <div class="relative h-36 w-full bg-slate-900 overflow-hidden">
+                    <div onclick="playSong(${JSON.stringify(song).replace(/"/g, '&quot;')})" class="glass rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500/50 sm:hover:scale-[1.02] transition flex flex-row sm:flex-col group relative">
+                        <div class="mobile-song-thumbnail relative sm:h-36 sm:w-full bg-slate-900 overflow-hidden">
                             ${imageHtml}
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
                             
@@ -1479,7 +1668,7 @@
                                 </div>
                             ` : ''}
 
-                            <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
+                            <div class="hidden sm:flex absolute top-2 right-2 items-center gap-1 z-10">
                                 <button onclick="toggleFav(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-pink-500"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
                                 ${isAdmin ? `
                                     <button onclick="openEditSongModal(event, ${song.id})" class="p-2 rounded-full bg-slate-950/60 text-slate-300 hover:text-indigo-400"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
@@ -1487,14 +1676,21 @@
                                 ` : ''}
                             </div>
                         </div>
-                        <div class="p-3 flex flex-col justify-between flex-1 gap-2">
-                            <div>
-                                <h3 class="font-bold text-sm line-clamp-1 text-slate-100 group-hover:text-indigo-400">${song.title}</h3>
+                        <div class="p-2.5 sm:p-3 min-w-0 flex flex-col justify-between flex-1 gap-2">
+                            <div class="min-w-0">
+                                <h3 class="font-bold text-sm line-clamp-2 sm:line-clamp-1 text-slate-100 group-hover:text-indigo-400">${song.title}</h3>
                                 <p class="text-xs text-slate-400 line-clamp-1 mt-0.5">${song.artist}</p>
                             </div>
-                            <div class="pt-1 border-t border-slate-800/80 flex items-center justify-between">
-                                <span class="text-[10px] text-slate-500 uppercase font-semibold">Rating</span>
+                            <div class="pt-1 border-t border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 min-w-0">
+                                <span class="hidden sm:inline text-[10px] text-slate-500 uppercase font-semibold">Rating</span>
                                 ${renderRatingSelector(song.id)}
+                                <div class="sm:hidden flex items-center gap-1 shrink-0">
+                                    <button onclick="toggleFav(event, ${song.id})" aria-label="Toggle favorite" class="mobile-tap rounded-lg bg-slate-900/80 text-slate-300"><i class="fa-${favorites.has(song.id) ? 'solid text-pink-500' : 'regular'} fa-heart text-sm"></i></button>
+                                    ${isAdmin ? `
+                                        <button onclick="openEditSongModal(event, ${song.id})" aria-label="Edit song" class="mobile-tap rounded-lg bg-slate-900/80 text-slate-300"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                        <button onclick="deleteSong(event, ${song.id})" aria-label="Delete song" class="mobile-tap rounded-lg bg-slate-900/80 text-slate-300"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                    ` : ''}
+                                </div>
                             </div>
                         </div>
                     </div>`;
